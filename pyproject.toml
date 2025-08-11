@@ -29,6 +29,9 @@ dependencies = [
     "httpx>=0.25.0",
     "psutil>=5.9.0",
     
+    # OpenAI API (required for LLM and STT)
+    "openai>=1.0.0",
+    
     # Data & Storage (sqlite3 and asyncio are built-in)
     "pydantic>=2.5.0",
 ]
