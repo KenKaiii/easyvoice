@@ -32,6 +32,9 @@ dependencies = [
     # OpenAI API (required for LLM and STT)
     "openai>=1.0.0",
     
+    # Audio Processing (required for proper TTS functionality)
+    "librosa>=0.10.0",
+    
     # Data & Storage (sqlite3 and asyncio are built-in)
     "pydantic>=2.5.0",
 ]
@@ -44,7 +47,6 @@ audio = [
     "openai-whisper>=20231117",
     "torch>=2.1.0",
     "kittentts>=0.1.3",
-    "librosa>=0.10.0",  # For audio resampling and speed adjustment
 ]
 
 dev = [
