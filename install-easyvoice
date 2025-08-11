@@ -127,30 +127,34 @@ download_and_run_installer() {
         return 0
     fi
 
-    print_step "Downloading installer for $OS..."
+    print_step "Downloading EasyVoice source code..."
     
-    if command -v curl &> /dev/null; then
-        curl -sSL "${REPO_URL}/${installer_script}" -o "${temp_dir}/${installer_script}"
-    elif command -v wget &> /dev/null; then
-        wget -q "${REPO_URL}/${installer_script}" -O "${temp_dir}/${installer_script}"
+    # Clone the repository to get the complete source
+    if command -v git &> /dev/null; then
+        git clone https://github.com/KenKaiii/easyvoice.git "${temp_dir}/easyvoice" --quiet
+        if [[ $? -ne 0 ]]; then
+            print_error "Failed to clone repository"
+            exit 1
+        fi
     else
-        print_error "Neither curl nor wget found"
-        print_step "Please install curl or wget and try again"
+        print_error "Git not found - required for installation"
+        print_step "Please install git and try again"
         exit 1
     fi
 
-    # Verify download
-    if [[ ! -f "${temp_dir}/${installer_script}" ]]; then
-        print_error "Failed to download installer"
-        exit 1
-    fi
-
-    print_step "Running ${installer_script}..."
-    chmod +x "${temp_dir}/${installer_script}"
+    print_step "Installing EasyVoice..."
+    cd "${temp_dir}/easyvoice"
     
-    # Run the installer
-    cd "${temp_dir}"
-    ./"${installer_script}"
+    # Run pip install directly since we have the full source
+    if pip3 install --user . &>/dev/null; then
+        print_success "EasyVoice installed successfully"
+    elif pip3 install --user . --break-system-packages &>/dev/null; then
+        print_success "EasyVoice installed successfully (with system packages override)"
+    else
+        print_error "Installation failed"
+        print_step "Try running: pip3 install --user git+https://github.com/KenKaiii/easyvoice.git"
+        exit 1
+    fi
     
     # Cleanup
     rm -rf "${temp_dir}"

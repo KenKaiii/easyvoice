@@ -1579,7 +1579,45 @@
       "lastAccessed": "2025-08-11T05:00:08.425Z",
       "lastVerified": "2025-08-11T05:00:08.425Z",
       "status": "fresh"
+    },
+    {
+      "id": "mem_1754888452262_ormpaks6d",
+      "content": "Successfully updated .gitignore file with comprehensive ignore patterns and pushed changes to remote repository. Commit hash: 09f8ed0. Changes included: enhanced .gitignore (246 lines covering OS files, temporary files, editor files, Python cache, testing, build artifacts, virtual environments, local development files, audio/media files, documentation builds, security files) and updated memories.json. All cache files were properly restored/ignored. Repository is now clean and well-configured.",
+      "type": "general",
+      "tags": [
+        "general",
+        "python",
+        "testing",
+        "git",
+        "gitignore",
+        "easyvoice",
+        "repository-maintenance",
+        "completed"
+      ],
+      "timestamp": "2025-08-11T05:00:52.262Z",
+      "context": "Completed comprehensive .gitignore update and repository cleanup for easyvoice project",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-11T05:00:52.262Z",
+      "lastVerified": "2025-08-11T05:00:52.262Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754888862843_s319ybqn5",
+      "content": "Fixed the universal installer script to clone full repository instead of just downloading install.sh. The issue was that pip install needed the complete source code (pyproject.toml, easyvoice/ package, etc.) but the installer was only downloading the install.sh script to a temp directory. Now using `git clone https://github.com/KenKaiii/easyvoice.git` to get full source before running pip install.",
+      "type": "config",
+      "tags": [
+        "config",
+        "installer",
+        "bugfix",
+        "easyvoice"
+      ],
+      "timestamp": "2025-08-11T05:07:42.843Z",
+      "context": "Installing EasyVoice was failing with \"Neither 'setup.py' nor 'pyproject.toml' found\" error",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-11T05:07:42.843Z",
+      "lastVerified": "2025-08-11T05:07:42.843Z",
+      "status": "fresh"
     }
   ],
-  "lastUpdated": "2025-08-11T05:00:08.425Z"
+  "lastUpdated": "2025-08-11T05:07:42.843Z"
 }
