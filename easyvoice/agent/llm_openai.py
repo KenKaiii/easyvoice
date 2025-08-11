@@ -73,6 +73,7 @@ class OpenAIInterface:
                 messages=messages,  # type: ignore[arg-type]
                 max_completion_tokens=self.settings.max_tokens,
                 timeout=timeout or self.settings.llm_timeout,
+                reasoning_effort="minimal",  # Ultra-low latency for voice interaction
             )
 
             if response.choices:
@@ -124,6 +125,7 @@ class OpenAIInterface:
                 messages=messages,  # type: ignore[arg-type]
                 max_completion_tokens=self.settings.max_tokens,
                 stream=True,
+                reasoning_effort="minimal",  # Ultra-low latency for voice interaction
             )
 
             async for chunk in stream:  # type: ignore[union-attr]
