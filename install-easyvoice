@@ -102,6 +102,13 @@ fix_path_if_needed() {
                 if ! grep -q "export PATH.*$(python3 -m site --user-base)/bin" "$shell_profile"; then
                     echo "export PATH=\"$python_user_bin:\$PATH\"" >> "$shell_profile"
                     print_success "Added Python user bin to PATH in $shell_profile"
+                    
+                    # Try to source the profile for immediate effect
+                    if source "$shell_profile" 2>/dev/null; then
+                        print_success "PATH updated for current session"
+                    else
+                        print_step "You'll need to restart terminal or run: source $shell_profile"
+                    fi
                 fi
             fi
         fi
@@ -359,8 +366,23 @@ show_next_steps() {
     
     # Show PATH hint if needed
     if [[ "$easyvoice_cmd" != "easyvoice" ]]; then
-        echo -e "${YELLOW}💡 To use 'easyvoice' directly, restart your terminal or run:${NC}"
-        echo "  source ~/.zshrc   # or ~/.bash_profile / ~/.bashrc"
+        echo -e "${YELLOW}🔄 PATH Updated! To use 'easyvoice' command immediately, run:${NC}"
+        local shell_profile=""
+        if [[ -f "$HOME/.zshrc" ]]; then
+            shell_profile="~/.zshrc"
+        elif [[ -f "$HOME/.bash_profile" ]]; then
+            shell_profile="~/.bash_profile"
+        elif [[ -f "$HOME/.bashrc" ]]; then
+            shell_profile="~/.bashrc"
+        fi
+        
+        if [[ -n "$shell_profile" ]]; then
+            echo -e "${CYAN}  source $shell_profile${NC}"
+        else
+            echo -e "${CYAN}  source ~/.zshrc${NC}   # or restart your terminal"
+        fi
+        echo ""
+        echo -e "${GREEN}After running the source command above, you can use 'easyvoice' directly!${NC}"
         echo ""
     fi
     
