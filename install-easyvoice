@@ -287,6 +287,7 @@ setup_openai_api() {
 verify_installation() {
     if [[ "$TEST_MODE" == "true" ]]; then
         print_step "TEST MODE: Would verify installation"
+        export OPENAI_TEST_RESULT="success"  # For test mode
         return 0
     fi
     
@@ -308,13 +309,16 @@ verify_installation() {
         local version=$("$easyvoice_path" --version 2>/dev/null || echo "unknown")
         print_success "EasyVoice installed successfully! Version: $version"
         
-        # Test basic functionality
+        # Test basic functionality and store result
+        export OPENAI_TEST_RESULT="not_tested"
         if [[ -n "${OPENAI_API_KEY:-}" ]]; then
             print_step "Testing OpenAI connection..."
             if timeout 10 "$easyvoice_path" ask "Hello" &>/dev/null; then
                 print_success "OpenAI integration working!"
+                export OPENAI_TEST_RESULT="success"
             else
                 print_warning "OpenAI test failed - check your API key and internet connection"
+                export OPENAI_TEST_RESULT="failed"
             fi
         fi
         
@@ -341,12 +345,32 @@ show_next_steps() {
     fi
     
     if [[ -n "${OPENAI_API_KEY:-}" ]]; then
-        echo -e "${GREEN}✅ OpenAI API configured - you're all set!${NC}"
-        echo ""
-        echo -e "${CYAN}Try it now:${NC}"
-        echo "  $easyvoice_cmd                    # Start interactive mode"
-        echo "  $easyvoice_cmd chat               # Start text chat"
-        echo "  $easyvoice_cmd ask \"Hello!\"       # Ask your first question"
+        case "${OPENAI_TEST_RESULT:-not_tested}" in
+            "success")
+                echo -e "${GREEN}✅ OpenAI API configured and tested - you're all set!${NC}"
+                echo ""
+                echo -e "${CYAN}Try it now:${NC}"
+                echo "  $easyvoice_cmd                    # Start interactive mode"
+                echo "  $easyvoice_cmd chat               # Start text chat"
+                echo "  $easyvoice_cmd ask \"Hello!\"       # Ask your first question"
+                ;;
+            "failed")
+                echo -e "${YELLOW}⚠️  OpenAI API key configured but connection test failed${NC}"
+                echo ""
+                echo -e "${CYAN}To troubleshoot:${NC}"
+                echo "  1. Check your API key is valid at: https://platform.openai.com/api-keys"
+                echo "  2. Ensure you have internet connection"
+                echo "  3. Try: $easyvoice_cmd ask \"Hello!\" (may work despite test failure)"
+                ;;
+            *)
+                echo -e "${GREEN}✅ OpenAI API key configured${NC}"
+                echo ""
+                echo -e "${CYAN}Try it now:${NC}"
+                echo "  $easyvoice_cmd ask \"Hello!\"       # Test your API key"
+                echo "  $easyvoice_cmd                    # Start interactive mode"
+                echo "  $easyvoice_cmd chat               # Start text chat"
+                ;;
+        esac
     else
         echo -e "${YELLOW}⚠️  OpenAI API key needed for full functionality${NC}"
         echo ""
