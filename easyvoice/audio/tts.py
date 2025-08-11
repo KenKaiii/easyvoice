@@ -57,18 +57,26 @@ class KittenTTS:
             raise
 
     def _load_model_sync(self) -> Any:
-        """Load KittenTTS model synchronously (for thread pool)"""
+        """Load TTS model synchronously (for thread pool)"""
         try:
-            # Import KittenTTS here to avoid import errors if not installed
-            from kittentts import KittenTTS as KittenTTSModel
+            # Check if using espeak fallback
+            if self.settings.tts_model == "espeak":
+                logger.info("Using espeak TTS fallback")
+                return "espeak"  # Return string marker for espeak mode
+            
+            # Try to load KittenTTS
+            try:
+                from kittentts import KittenTTS as KittenTTSModel
+                return KittenTTSModel(self.settings.tts_model)
+            except ImportError:
+                logger.warning("KittenTTS not installed, falling back to espeak")
+                return "espeak"
+            except Exception as e:
+                logger.warning(f"KittenTTS failed: {e}, falling back to espeak")
+                return "espeak"
 
-            return KittenTTSModel(self.settings.tts_model)
-
-        except ImportError:
-            logger.error("KittenTTS not installed. Install with: pip install kittentts")
-            raise
         except Exception as e:
-            logger.error(f"Failed to load KittenTTS model: {e}")
+            logger.error(f"Failed to load TTS model: {e}")
             raise
 
     async def synthesize_text(
@@ -130,14 +138,73 @@ class KittenTTS:
             Audio data as numpy array or None if failed
         """
         try:
-            # Generate audio using KittenTTS
-            # KittenTTS returns audio at 24kHz sample rate
             if self.model is None:
                 logger.error("TTS model not loaded")
                 return None
 
+            # Handle espeak mode
+            if self.model == "espeak":
+                return self._synthesize_espeak(text, voice_id)
+            
+            # Handle KittenTTS mode
+            return self._synthesize_kitten_tts(text, voice_id)
+
+        except Exception as e:
+            logger.error(f"Synchronous TTS failed: {e}")
+            return None
+
+    def _synthesize_espeak(self, text: str, voice_id: int) -> Optional[np.ndarray]:
+        """Synthesize using espeak"""
+        import subprocess
+        import tempfile
+        
+        try:
+            # Create temporary file for audio output
+            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp_file:
+                tmp_path = tmp_file.name
+            
+            # Run espeak to generate audio
+            cmd = [
+                'espeak',
+                '-w', tmp_path,  # Write to WAV file
+                '-s', '150',     # Speed (words per minute)
+                text
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            
+            if result.returncode != 0:
+                logger.error(f"espeak failed: {result.stderr}")
+                return None
+            
+            # Load the generated audio
+            try:
+                audio_data, sample_rate = sf.read(tmp_path)
+                
+                # Convert to float32 and ensure mono
+                if audio_data.ndim > 1:
+                    audio_data = np.mean(audio_data, axis=1)
+                audio_data = audio_data.astype(np.float32)
+                
+                logger.info(f"espeak generated {len(audio_data)} samples at {sample_rate}Hz")
+                return audio_data
+                
+            finally:
+                # Clean up temp file
+                Path(tmp_path).unlink(missing_ok=True)
+                
+        except subprocess.TimeoutExpired:
+            logger.error("espeak synthesis timed out")
+            return None
+        except Exception as e:
+            logger.error(f"espeak synthesis failed: {e}")
+            return None
+
+    def _synthesize_kitten_tts(self, text: str, voice_id: int) -> Optional[np.ndarray]:
+        """Synthesize using KittenTTS"""
+        try:
             # Map voice ID to KittenTTS voice names
-            voice_map: Dict[int, str] = {  # type: ignore[unreachable]
+            voice_map: Dict[int, str] = {
                 0: "expr-voice-2-m",
                 1: "expr-voice-2-f",
                 2: "expr-voice-3-m",
@@ -149,13 +216,13 @@ class KittenTTS:
             }
 
             voice_name = voice_map.get(voice_id, "expr-voice-2-m")
-            logger.debug(f"Using voice {voice_id} -> {voice_name}")
+            logger.debug(f"Using KittenTTS voice {voice_id} -> {voice_name}")
 
             # Generate audio data
             audio_data = self.model.generate(text, voice=voice_name)
 
             if audio_data is None or len(audio_data) == 0:
-                logger.warning("TTS returned empty audio")
+                logger.warning("KittenTTS returned empty audio")
                 return None
 
             # Ensure audio is float32
@@ -167,12 +234,12 @@ class KittenTTS:
                 audio_data = self._adjust_speed(audio_data, self.settings.tts_speed)
 
             logger.info(
-                f"TTS generated {len(audio_data)} samples for text: '{text[:50]}...'"
+                f"KittenTTS generated {len(audio_data)} samples for text: '{text[:50]}...'"
             )
             return audio_data
 
         except Exception as e:
-            logger.error(f"Synchronous TTS failed: {e}")
+            logger.error(f"KittenTTS synthesis failed: {e}")
             return None
 
     def _adjust_speed(self, audio_data: np.ndarray, speed_factor: float) -> np.ndarray:
