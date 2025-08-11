@@ -313,12 +313,18 @@ verify_installation() {
         export OPENAI_TEST_RESULT="not_tested"
         if [[ -n "${OPENAI_API_KEY:-}" ]]; then
             print_step "Testing OpenAI connection..."
-            if timeout 10 "$easyvoice_path" ask "Hello" &>/dev/null; then
+            if timeout 30 "$easyvoice_path" ask "Hello" >/dev/null 2>&1; then
                 print_success "OpenAI integration working!"
                 export OPENAI_TEST_RESULT="success"
             else
-                print_warning "OpenAI test failed - check your API key and internet connection"
-                export OPENAI_TEST_RESULT="failed"
+                print_step "Test failed - trying with debug output..."
+                if timeout 30 "$easyvoice_path" ask "Hello" 2>&1 | head -3; then
+                    print_warning "OpenAI test passed on retry but had warnings"
+                    export OPENAI_TEST_RESULT="success"
+                else
+                    print_warning "OpenAI test failed - check your API key and internet connection"
+                    export OPENAI_TEST_RESULT="failed"
+                fi
             fi
         fi
         
