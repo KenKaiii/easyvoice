@@ -146,6 +146,7 @@ settings.local.json
 # Memory files that may contain sensitive data
 memories.json
 memory_*.json
+memory.db
 
 # OS-specific files
 .DS_Store

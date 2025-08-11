@@ -663,13 +663,7 @@ class InteractiveCLI:
 
         console.print("🎤 Starting voice conversation mode", style=STYLE_BOLD_BLUE)
 
-        if self.settings.push_to_talk:
-            console.print(
-                "Hold [bold green]TAB[/bold green] to talk, "
-                "[bold red]Ctrl+C[/bold red] to exit\n",
-                style="dim",
-            )
-        else:
+        if not self.settings.push_to_talk:
             console.print("Say something to start... (Ctrl+C to exit)\n", style="dim")
 
         try:
