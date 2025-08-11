@@ -102,8 +102,42 @@ class OpenAIWhisperSTT:
             logger.error(f"OpenAI Whisper transcription failed: {e}")
             return None
 
+    async def transcribe_audio_data(self, audio_data: np.ndarray) -> Optional[str]:
+        """Alias for transcribe_audio to match interface"""
+        return await self.transcribe_audio(audio_data)
+
     async def close(self) -> None:
         """Clean up resources"""
         if self.client:
             await self.client.close()
             self.client = None
+
+
+# Testing function
+async def test_speech_recognition(settings, verbose: bool = False) -> bool:
+    """Test OpenAI Whisper API speech recognition
+    
+    Args:
+        settings: EasyVoice settings
+        verbose: Show detailed output
+        
+    Returns:
+        True if test successful, False otherwise
+    """
+    try:
+        stt = OpenAIWhisperSTT(settings)
+        
+        if not stt.client:
+            if verbose:
+                print("OpenAI API not available or no API key")
+            return False
+            
+        if verbose:
+            print("✓ OpenAI Whisper API initialized successfully")
+            
+        return True
+        
+    except Exception as e:
+        if verbose:
+            print(f"OpenAI Whisper API test failed: {e}")
+        return False

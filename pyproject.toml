@@ -33,11 +33,8 @@ dependencies = [
     "openai>=1.0.0",
     
     # Audio Processing (REQUIRED for voice functionality)
-    "librosa>=0.10.0",
     "sounddevice>=0.4.6",
     "soundfile>=0.12.0",
-    "torch>=2.1.0",
-    "openai-whisper>=20231117",
     "kittentts>=0.1.3",
     
     # Data & Storage (sqlite3 and asyncio are built-in)

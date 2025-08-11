@@ -237,7 +237,7 @@ def test_audio(ctx: click.Context, duration: int, verbose: bool) -> None:
 
     try:
         from easyvoice.audio.input import test_microphone
-        from easyvoice.audio.stt import test_speech_recognition
+        from easyvoice.audio.stt_openai import test_speech_recognition
         from easyvoice.audio.tts import test_text_to_speech
 
         # Test 1: Microphone input

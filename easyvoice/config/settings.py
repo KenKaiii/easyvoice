@@ -53,13 +53,7 @@ class Settings:
         == "true"
     )
 
-    # Speech-to-Text Configuration  
-    stt_provider: str = field(
-        default_factory=lambda: os.getenv("EASYVOICE_STT_PROVIDER", "openai")  # Default to fast OpenAI API
-    )
-    whisper_model: str = field(
-        default_factory=lambda: os.getenv("EASYVOICE_WHISPER_MODEL", "base")
-    )
+    # Speech-to-Text Configuration (OpenAI Whisper API only)
     whisper_language: Optional[str] = field(
         default_factory=lambda: os.getenv("EASYVOICE_WHISPER_LANGUAGE")
     )
