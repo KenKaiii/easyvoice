@@ -64,12 +64,7 @@ class Settings:
     tts_model: str = field(
         default_factory=lambda: os.getenv(
             "EASYVOICE_TTS_MODEL",
-            (
-                "/home/ken/.cache/huggingface/hub/models--KittenML--"
-                "kitten-tts-nano-0.1/snapshots/"
-                "ec0bae5fed153f8f9710ad541e73f427fafea9c5/"
-                "kitten_tts_nano_v0_1.onnx"
-            ),
+            "KittenML/kitten-tts-nano-0.1"  # Use HuggingFace model name, let library handle path
         )
     )
     tts_voice: int = field(
