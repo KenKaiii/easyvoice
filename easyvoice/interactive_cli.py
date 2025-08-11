@@ -323,45 +323,66 @@ class InteractiveCLI:
         return speech_detected
 
     async def _record_push_to_talk(self, audio_input: Any) -> np.ndarray:
-        """Record audio with push-to-talk (space bar)"""
-        import sys, termios, tty
+        """Record audio with push-to-talk (TAB key)"""
+        import sys
         
         console.print("🎤 [bold green]Hold TAB and speak, release when done[/bold green]")
         
-        # Get original terminal settings
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        
         try:
-            tty.cbreak(fd)
+            import termios, tty
             
+            # Get original terminal settings
+            fd = sys.stdin.fileno()
+            old_settings = termios.tcgetattr(fd)
+            
+            try:
+                tty.setcbreak(fd)
+                
+                while True:
+                    # Wait for TAB key press
+                    key = sys.stdin.read(1)
+                    if key == '\t':  # TAB character
+                        console.print("🔴 [bold red]Recording...[/bold red] (release TAB to stop)")
+                        
+                        # Start recording
+                        await audio_input.start_recording()
+                        
+                        # Wait for TAB key release (actually wait for any other key)
+                        while True:
+                            key = sys.stdin.read(1)
+                            if key != '\t':
+                                break
+                            await asyncio.sleep(0.1)
+                        
+                        # Stop recording and get data
+                        await audio_input.stop_recording()
+                        audio_data = audio_input.get_audio_data()
+                        
+                        console.print("⏹️ [dim]Recording stopped[/dim]")
+                        return audio_data
+                    elif key == '\x03':  # Ctrl+C
+                        raise KeyboardInterrupt
+                        
+            finally:
+                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+                
+        except (ImportError, OSError, AttributeError) as e:
+            # Fallback for systems without proper terminal support
+            console.print(f"[yellow]Terminal input not available: {e}[/yellow]")
+            console.print("[yellow]Using simplified input mode - press Enter to record[/yellow]")
+            
+            # Simple fallback - press Enter to start/stop recording
             while True:
-                # Wait for TAB key press
-                key = sys.stdin.read(1)
-                if key == '\t':  # TAB character
-                    console.print("🔴 [bold red]Recording...[/bold red] (release TAB to stop)")
-                    
-                    # Start recording
-                    await audio_input.start_recording()
-                    
-                    # Wait for TAB key release (actually wait for any other key)
-                    while True:
-                        key = sys.stdin.read(1)
-                        if key != '\t':
-                            break
-                        await asyncio.sleep(0.1)
-                    
-                    # Stop recording and get data
-                    await audio_input.stop_recording()
-                    audio_data = audio_input.get_audio_data()
-                    
-                    console.print("⏹️ [dim]Recording stopped[/dim]")
-                    return audio_data
-                elif key == '\x03':  # Ctrl+C
-                    raise KeyboardInterrupt
-                    
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+                input("Press Enter to start recording...")
+                console.print("🔴 [bold red]Recording...[/bold red]")
+                
+                await audio_input.start_recording()
+                input("Press Enter to stop recording...")
+                await audio_input.stop_recording()
+                audio_data = audio_input.get_audio_data()
+                
+                console.print("⏹️ [dim]Recording stopped[/dim]")
+                return audio_data
         
         return np.array([])
 
