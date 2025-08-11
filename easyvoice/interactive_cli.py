@@ -323,10 +323,10 @@ class InteractiveCLI:
         return speech_detected
 
     async def _record_push_to_talk(self, audio_input: Any) -> np.ndarray:
-        """Record audio with push-to-talk (TAB key)"""
+        """Record audio with push-to-talk (TAB to start, any key to stop)"""
         import sys
         
-        console.print("🎤 [bold green]Hold TAB and speak, release when done[/bold green]")
+        console.print("🎤 [bold green]Press TAB to start recording, then any key to stop[/bold green]")
         
         try:
             import termios, tty
@@ -339,20 +339,16 @@ class InteractiveCLI:
                 tty.setcbreak(fd)
                 
                 while True:
-                    # Wait for TAB key press
+                    # Wait for TAB key press to start
                     key = sys.stdin.read(1)
                     if key == '\t':  # TAB character
-                        console.print("🔴 [bold red]Recording...[/bold red] (release TAB to stop)")
+                        console.print("🔴 [bold red]Recording... Press any key to stop[/bold red]")
                         
                         # Start recording
                         await audio_input.start_recording()
                         
-                        # Wait for TAB key release (actually wait for any other key)
-                        while True:
-                            key = sys.stdin.read(1)
-                            if key != '\t':
-                                break
-                            await asyncio.sleep(0.1)
+                        # Wait for ANY key press to stop
+                        sys.stdin.read(1)
                         
                         # Stop recording and get data
                         await audio_input.stop_recording()
@@ -362,6 +358,8 @@ class InteractiveCLI:
                         return audio_data
                     elif key == '\x03':  # Ctrl+C
                         raise KeyboardInterrupt
+                    else:
+                        console.print("[dim]Press TAB to start recording...[/dim]")
                         
             finally:
                 termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
