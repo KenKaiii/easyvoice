@@ -44,6 +44,7 @@ audio = [
     "openai-whisper>=20231117",
     "torch>=2.1.0",
     "kittentts>=0.1.3",
+    "librosa>=0.10.0",  # For audio resampling and speed adjustment
 ]
 
 dev = [
