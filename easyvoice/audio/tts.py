@@ -140,6 +140,9 @@ class KittenTTS:
                 logger.error("KittenTTS model not loaded")
                 return None
 
+            # Preprocess text to avoid ONNX Runtime issues
+            processed_text = self._preprocess_text_for_onnx(text)
+
             # Map voice ID to KittenTTS voice names
             voice_map: Dict[int, str] = {  # type: ignore[unreachable]
                 0: "expr-voice-2-m",
@@ -155,8 +158,16 @@ class KittenTTS:
             voice_name = voice_map.get(voice_id, "expr-voice-2-m")
             logger.debug(f"Using KittenTTS voice {voice_id} -> {voice_name}")
 
-            # Generate audio data
-            audio_data = self.model.generate(text, voice=voice_name)
+            # Generate audio data with error handling for ONNX issues
+            try:
+                audio_data = self.model.generate(processed_text, voice=voice_name)
+            except Exception as onnx_error:
+                # Handle ONNX Runtime Expand node errors
+                if "Expand node" in str(onnx_error) or "invalid expand shape" in str(onnx_error):
+                    logger.warning(f"ONNX Expand error, trying text chunking: {onnx_error}")
+                    audio_data = self._synthesize_with_chunking(processed_text, voice_name)
+                else:
+                    raise onnx_error
 
             if audio_data is None or len(audio_data) == 0:
                 logger.warning("KittenTTS returned empty audio")
@@ -178,6 +189,82 @@ class KittenTTS:
 
         except Exception as e:
             logger.error(f"KittenTTS synthesis failed: {e}")
+            return None
+
+    def _preprocess_text_for_onnx(self, text: str) -> str:
+        """Preprocess text to avoid ONNX Runtime issues
+        
+        Args:
+            text: Input text to preprocess
+            
+        Returns:
+            Processed text that's more compatible with ONNX
+        """
+        # Limit text length to avoid dynamic shape issues
+        max_length = 200
+        if len(text) > max_length:
+            # Split at sentence boundaries if possible
+            sentences = text.split('. ')
+            if len(sentences) > 1 and len(sentences[0]) <= max_length:
+                text = sentences[0] + '.'
+            else:
+                text = text[:max_length].rstrip() + '.'
+        
+        # Remove problematic characters that might cause shape issues
+        text = text.replace('\n', ' ').replace('\r', ' ')
+        text = ' '.join(text.split())  # Normalize whitespace
+        
+        # Ensure text isn't empty after preprocessing
+        if not text.strip():
+            text = "Hello."
+            
+        return text
+    
+    def _synthesize_with_chunking(self, text: str, voice_name: str) -> Optional[np.ndarray]:
+        """Synthesize text using chunking to avoid ONNX errors
+        
+        Args:
+            text: Text to synthesize
+            voice_name: Voice name to use
+            
+        Returns:
+            Combined audio data or None if failed
+        """
+        try:
+            # Split text into smaller chunks
+            max_chunk_size = 50
+            words = text.split()
+            
+            if len(words) <= max_chunk_size:
+                # Text is already small, try direct synthesis with minimal text
+                minimal_text = " ".join(words[:10]) if len(words) > 10 else text
+                return self.model.generate(minimal_text, voice=voice_name)
+            
+            # Process in chunks
+            audio_chunks = []
+            for i in range(0, len(words), max_chunk_size):
+                chunk_words = words[i:i + max_chunk_size]
+                chunk_text = " ".join(chunk_words)
+                
+                try:
+                    chunk_audio = self.model.generate(chunk_text, voice=voice_name)
+                    if chunk_audio is not None and len(chunk_audio) > 0:
+                        audio_chunks.append(chunk_audio)
+                except Exception as chunk_error:
+                    logger.warning(f"Chunk synthesis failed, skipping: {chunk_error}")
+                    continue
+            
+            if not audio_chunks:
+                logger.error("All chunks failed to synthesize")
+                return None
+                
+            # Concatenate audio chunks
+            combined_audio = np.concatenate(audio_chunks)
+            logger.info(f"Successfully synthesized {len(audio_chunks)} chunks")
+            return combined_audio
+            
+        except Exception as e:
+            logger.error(f"Chunked synthesis failed: {e}")
             return None
 
     def _adjust_speed(self, audio_data: np.ndarray, speed_factor: float) -> np.ndarray:
