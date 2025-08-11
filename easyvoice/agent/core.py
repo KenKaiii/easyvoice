@@ -32,7 +32,7 @@ class VoiceAgent:
 
             self.llm = OpenAIInterface(settings)
         else:
-            self.llm = CustomLLMInterface(settings)
+            self.llm = CustomLLMInterface(settings)  # type: ignore[assignment]
 
         self.tools = ToolsManager(settings)
 

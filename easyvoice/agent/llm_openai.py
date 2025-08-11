@@ -60,6 +60,7 @@ class OpenAIInterface:
         if not self.client or not HAS_OPENAI:
             return f"Mock response to: {message}"
 
+        messages = None
         try:
             messages = self._prepare_messages(message, context)
             logger.debug(f"Context received: {context}")
@@ -69,7 +70,7 @@ class OpenAIInterface:
 
             response = await self.client.chat.completions.create(
                 model=self.settings.openai_model,
-                messages=messages,
+                messages=messages,  # type: ignore[arg-type]
                 max_completion_tokens=self.settings.max_tokens,
                 timeout=timeout or self.settings.llm_timeout,
             )
@@ -80,7 +81,8 @@ class OpenAIInterface:
                 logger.debug(f"OpenAI full response: {response}")
                 if not content:
                     logger.warning(
-                        f"OpenAI returned empty content. Full response: {response.model_dump()}"
+                        "OpenAI returned empty content. Full response: "
+                        f"{response.model_dump()}"
                     )
                 return content
             else:
@@ -91,7 +93,8 @@ class OpenAIInterface:
         except Exception as e:
             logger.error(f"OpenAI API error: {e}")
             logger.error(f"Failed request context: {context}")
-            logger.error(f"Failed request messages: {messages}")
+            if messages:
+                logger.error(f"Failed request messages: {messages}")
             return None
 
     async def generate_response_stream(
@@ -118,12 +121,12 @@ class OpenAIInterface:
 
             stream = await self.client.chat.completions.create(
                 model=self.settings.openai_model,
-                messages=messages,
+                messages=messages,  # type: ignore[arg-type]
                 max_completion_tokens=self.settings.max_tokens,
                 stream=True,
             )
 
-            async for chunk in stream:
+            async for chunk in stream:  # type: ignore[union-attr]
                 if chunk.choices and chunk.choices[0].delta.content:
                     yield chunk.choices[0].delta.content
 

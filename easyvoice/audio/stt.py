@@ -9,9 +9,9 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import numpy as np
-import soundfile as sf
-import torch
-import whisper
+import soundfile as sf  # type: ignore[import-untyped]
+import torch  # type: ignore[import-not-found]
+import whisper  # type: ignore[import-not-found]
 
 from easyvoice.config.settings import Settings
 
@@ -166,7 +166,7 @@ class WhisperSTT:
 
             # Resample if needed (Whisper works best at 16kHz)
             if sample_rate != 16000:
-                import librosa
+                import librosa  # type: ignore[import-not-found]
 
                 audio_data = librosa.resample(
                     audio_data, orig_sr=sample_rate, target_sr=16000

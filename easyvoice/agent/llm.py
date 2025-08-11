@@ -31,7 +31,7 @@ class LLMInterface:
         """Initialize Ollama client connection"""
         try:
             # Import here to handle missing dependency gracefully
-            from langchain_ollama import ChatOllama
+            from langchain_ollama import ChatOllama  # type: ignore[import-not-found]
 
             self.client = ChatOllama(
                 model=self.settings.model_name,

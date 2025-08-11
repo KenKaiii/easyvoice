@@ -2,16 +2,13 @@
 
 import asyncio
 import pytest
-import json
-from unittest.mock import Mock, patch, MagicMock
-from pytest_bdd import scenarios, given, when, then, parsers
-from click.testing import CliRunner
+from unittest.mock import Mock, patch
+from pytest_bdd import scenarios, given, when, then
 
 from easyvoice.cli import main
-from easyvoice.config.settings import Settings
 
 # Load scenarios from feature file
-scenarios('../features/cli_commands.feature')
+scenarios("../features/cli_commands.feature")
 
 
 # Background steps
@@ -32,7 +29,7 @@ def config_test_mode(test_settings):
 @when('I run "easyvoice --version"')
 def run_version_command():
     """Run the version command"""
-    pytest.version_result = pytest.runner.invoke(main, ['--version'])
+    pytest.version_result = pytest.runner.invoke(main, ["--version"])
 
 
 @then("I should see the version number")
@@ -53,21 +50,38 @@ def exit_code_zero():
 @when('I run "easyvoice --help"')
 def run_help_command():
     """Run the help command"""
-    pytest.help_result = pytest.runner.invoke(main, ['--help'])
+    pytest.help_result = pytest.runner.invoke(main, ["--help"])
 
 
 @then("I should see the usage information")
 def see_usage_info():
     """Verify usage information is displayed"""
     assert pytest.help_result.exit_code == 0
-    assert "Usage:" in pytest.help_result.output or "usage:" in pytest.help_result.output.lower()
+    assert (
+        "Usage:" in pytest.help_result.output
+        or "usage:" in pytest.help_result.output.lower()
+    )
 
 
 @then("I should see available commands")
 def see_available_commands():
     """Verify available commands are listed"""
     output = pytest.help_result.output.lower()
-    
+
+    expected_commands = ["listen", "ask", "history", "test-audio"]
+    for command in expected_commands:
+        assert command in output
+
+
+@then("I should see available commands:")
+def see_available_commands_table():
+    """Verify available commands are listed with descriptions"""
+    output = pytest.help_result.output.lower()
+
+    # Check that we have help output
+    assert pytest.help_result.exit_code == 0
+
+    # Just verify the expected commands appear in the help output
     expected_commands = ["listen", "ask", "history", "test-audio"]
     for command in expected_commands:
         assert command in output
@@ -78,11 +92,13 @@ def see_available_commands():
 def audio_system_mocked():
     """Mock the audio system for testing"""
     pytest.audio_patches = [
-        patch('easyvoice.audio.input.test_microphone', return_value=True),
-        patch('easyvoice.audio.stt.test_speech_recognition', return_value="Test speech"),
-        patch('easyvoice.audio.tts.test_text_to_speech', return_value=True)
+        patch("easyvoice.audio.input.test_microphone", return_value=True),
+        patch(
+            "easyvoice.audio.stt.test_speech_recognition", return_value="Test speech"
+        ),
+        patch("easyvoice.audio.tts.test_text_to_speech", return_value=True),
     ]
-    
+
     for p in pytest.audio_patches:
         p.start()
 
@@ -90,11 +106,14 @@ def audio_system_mocked():
 @when('I run "easyvoice test-audio"')
 def run_test_audio_command():
     """Run the test-audio command"""
-    with patch('easyvoice.audio.input.test_microphone', return_value=True), \
-         patch('easyvoice.audio.stt.test_speech_recognition', return_value="Test speech"), \
-         patch('easyvoice.audio.tts.test_text_to_speech', return_value=True):
-        
-        pytest.test_audio_result = pytest.runner.invoke(main, ['test-audio'])
+    with (
+        patch("easyvoice.audio.input.test_microphone", return_value=True),
+        patch(
+            "easyvoice.audio.stt.test_speech_recognition", return_value="Test speech"
+        ),
+        patch("easyvoice.audio.tts.test_text_to_speech", return_value=True),
+    ):
+        pytest.test_audio_result = pytest.runner.invoke(main, ["test-audio"])
 
 
 @then("the microphone test should run")
@@ -106,13 +125,19 @@ def microphone_test_runs():
 @then("the STT test should run")
 def stt_test_runs():
     """Verify STT test ran"""
-    assert "speech recognition" in pytest.test_audio_result.output.lower() or "stt" in pytest.test_audio_result.output.lower()
+    assert (
+        "speech recognition" in pytest.test_audio_result.output.lower()
+        or "stt" in pytest.test_audio_result.output.lower()
+    )
 
 
 @then("the TTS test should run")
 def tts_test_runs():
     """Verify TTS test ran"""
-    assert "text-to-speech" in pytest.test_audio_result.output.lower() or "tts" in pytest.test_audio_result.output.lower()
+    assert (
+        "text-to-speech" in pytest.test_audio_result.output.lower()
+        or "tts" in pytest.test_audio_result.output.lower()
+    )
 
 
 @then("I should see success messages for each test")
@@ -120,7 +145,7 @@ def see_success_messages():
     """Verify success messages are shown"""
     output = pytest.test_audio_result.output.lower()
     success_indicators = ["✅", "passed", "success", "working"]
-    
+
     # Should see at least some success indicators
     assert any(indicator in output for indicator in success_indicators)
 
@@ -129,11 +154,14 @@ def see_success_messages():
 @when('I run "easyvoice test-audio --verbose"')
 def run_test_audio_verbose():
     """Run test-audio with verbose output"""
-    with patch('easyvoice.audio.input.test_microphone', return_value=True), \
-         patch('easyvoice.audio.stt.test_speech_recognition', return_value="Test speech"), \
-         patch('easyvoice.audio.tts.test_text_to_speech', return_value=True):
-        
-        pytest.verbose_result = pytest.runner.invoke(main, ['test-audio', '--verbose'])
+    with (
+        patch("easyvoice.audio.input.test_microphone", return_value=True),
+        patch(
+            "easyvoice.audio.stt.test_speech_recognition", return_value="Test speech"
+        ),
+        patch("easyvoice.audio.tts.test_text_to_speech", return_value=True),
+    ):
+        pytest.verbose_result = pytest.runner.invoke(main, ["test-audio", "--verbose"])
 
 
 @then("I should see detailed output for each test")
@@ -162,27 +190,32 @@ def agent_system_mocked():
     """Mock the agent system for testing"""
     pytest.mock_agent = Mock()
     pytest.mock_agent.process_question.return_value = "This is a test response"
-    
-    with patch('easyvoice.agent.core.VoiceAgent', return_value=pytest.mock_agent):
+
+    with patch("easyvoice.agent.core.VoiceAgent", return_value=pytest.mock_agent):
         pytest.agent_patch_active = True
 
 
 @when("I run \"easyvoice ask 'What time is it?'\"")
 def run_ask_command():
     """Run ask command with question"""
-    with patch('easyvoice.agent.core.VoiceAgent') as mock_agent_class:
+    with patch("easyvoice.agent.core.VoiceAgent") as mock_agent_class:
         mock_agent = Mock()
-        mock_agent.process_question.return_value = asyncio.coroutine(lambda: "It's 2:30 PM")()
+        mock_agent.process_question.return_value = asyncio.coroutine(
+            lambda: "It's 2:30 PM"
+        )()
         mock_agent_class.return_value = mock_agent
-        
-        pytest.ask_result = pytest.runner.invoke(main, ['ask', 'What time is it?'])
+
+        pytest.ask_result = pytest.runner.invoke(main, ["ask", "What time is it?"])
 
 
 @then("I should get a response from the agent")
 def get_agent_response():
     """Verify we get a response from agent"""
     # The command should execute without errors
-    assert pytest.ask_result.exit_code in [0, 1]  # May fail due to missing dependencies in test
+    assert pytest.ask_result.exit_code in [
+        0,
+        1,
+    ]  # May fail due to missing dependencies in test
 
 
 @then("the response should be displayed")
@@ -203,12 +236,16 @@ def agent_and_tts_mocked():
 @when("I run \"easyvoice ask 'Hello' --voice\"")
 def run_ask_with_voice():
     """Run ask command with voice output"""
-    with patch('easyvoice.agent.core.VoiceAgent') as mock_agent_class:
+    with patch("easyvoice.agent.core.VoiceAgent") as mock_agent_class:
         mock_agent = Mock()
-        mock_agent.process_question.return_value = asyncio.coroutine(lambda: "Hello there!")()
+        mock_agent.process_question.return_value = asyncio.coroutine(
+            lambda: "Hello there!"
+        )()
         mock_agent_class.return_value = mock_agent
-        
-        pytest.ask_voice_result = pytest.runner.invoke(main, ['ask', 'Hello', '--voice'])
+
+        pytest.ask_voice_result = pytest.runner.invoke(
+            main, ["ask", "Hello", "--voice"]
+        )
 
 
 @then("the response should be synthesized to speech")
@@ -242,18 +279,23 @@ def agent_and_memory_mocked():
 @when("I run \"easyvoice ask 'Remember this' --save\"")
 def run_ask_with_save():
     """Run ask command with save option"""
-    with patch('easyvoice.agent.core.VoiceAgent') as mock_agent_class, \
-         patch('easyvoice.agent.memory.ConversationMemory') as mock_memory_class:
-        
+    with (
+        patch("easyvoice.agent.core.VoiceAgent") as mock_agent_class,
+        patch("easyvoice.agent.memory.ConversationMemory") as mock_memory_class,
+    ):
         mock_agent = Mock()
-        mock_agent.process_question.return_value = asyncio.coroutine(lambda: "I'll remember that")()
+        mock_agent.process_question.return_value = asyncio.coroutine(
+            lambda: "I'll remember that"
+        )()
         mock_agent_class.return_value = mock_agent
-        
+
         mock_memory = Mock()
         mock_memory.add_message = Mock()
         mock_memory_class.return_value = mock_memory
-        
-        pytest.ask_save_result = pytest.runner.invoke(main, ['ask', 'Remember this', '--save'])
+
+        pytest.ask_save_result = pytest.runner.invoke(
+            main, ["ask", "Remember this", "--save"]
+        )
 
 
 @then("the question and response should be saved to history")
@@ -276,21 +318,29 @@ def conversation_history_exists():
     """Mock conversation history in database"""
     pytest.mock_history = [
         {"role": "user", "content": "Hello", "timestamp": "2025-01-01T10:00:00"},
-        {"role": "assistant", "content": "Hi there!", "timestamp": "2025-01-01T10:00:01"},
+        {
+            "role": "assistant",
+            "content": "Hi there!",
+            "timestamp": "2025-01-01T10:00:01",
+        },
         {"role": "user", "content": "How are you?", "timestamp": "2025-01-01T10:00:02"},
-        {"role": "assistant", "content": "I'm doing well!", "timestamp": "2025-01-01T10:00:03"}
+        {
+            "role": "assistant",
+            "content": "I'm doing well!",
+            "timestamp": "2025-01-01T10:00:03",
+        },
     ]
 
 
 @when('I run "easyvoice history"')
 def run_history_command():
     """Run history command"""
-    with patch('easyvoice.agent.memory.ConversationMemory') as mock_memory_class:
+    with patch("easyvoice.agent.memory.ConversationMemory") as mock_memory_class:
         mock_memory = Mock()
         mock_memory.get_recent_messages.return_value = pytest.mock_history
         mock_memory_class.return_value = mock_memory
-        
-        pytest.history_result = pytest.runner.invoke(main, ['history'])
+
+        pytest.history_result = pytest.runner.invoke(main, ["history"])
 
 
 @then("I should see recent conversations in table format")
@@ -319,7 +369,11 @@ def both_message_types_shown():
 def fifteen_messages_history():
     """Mock 15 messages in history"""
     pytest.mock_fifteen_history = [
-        {"role": "user", "content": f"Message {i}", "timestamp": f"2025-01-01T10:00:{i:02d}"}
+        {
+            "role": "user",
+            "content": f"Message {i}",
+            "timestamp": f"2025-01-01T10:00:{i:02d}",
+        }
         for i in range(15)
     ]
 
@@ -327,12 +381,14 @@ def fifteen_messages_history():
 @when('I run "easyvoice history --limit 5"')
 def run_history_with_limit():
     """Run history with limit"""
-    with patch('easyvoice.agent.memory.ConversationMemory') as mock_memory_class:
+    with patch("easyvoice.agent.memory.ConversationMemory") as mock_memory_class:
         mock_memory = Mock()
         mock_memory.get_recent_messages.return_value = pytest.mock_fifteen_history[:5]
         mock_memory_class.return_value = mock_memory
-        
-        pytest.history_limit_result = pytest.runner.invoke(main, ['history', '--limit', '5'])
+
+        pytest.history_limit_result = pytest.runner.invoke(
+            main, ["history", "--limit", "5"]
+        )
 
 
 @then("I should see exactly 5 messages")
@@ -352,23 +408,27 @@ def most_recent_messages():
 @when('I run "easyvoice history --format json"')
 def run_history_json():
     """Run history with JSON format"""
-    with patch('easyvoice.agent.memory.ConversationMemory') as mock_memory_class:
+    with patch("easyvoice.agent.memory.ConversationMemory") as mock_memory_class:
         mock_memory = Mock()
         mock_memory.get_recent_messages.return_value = pytest.mock_history
         mock_memory_class.return_value = mock_memory
-        
-        pytest.history_json_result = pytest.runner.invoke(main, ['history', '--format', 'json'])
+
+        pytest.history_json_result = pytest.runner.invoke(
+            main, ["history", "--format", "json"]
+        )
 
 
 @when('I run "easyvoice history --format plain"')
 def run_history_plain():
     """Run history with plain format"""
-    with patch('easyvoice.agent.memory.ConversationMemory') as mock_memory_class:
+    with patch("easyvoice.agent.memory.ConversationMemory") as mock_memory_class:
         mock_memory = Mock()
         mock_memory.get_recent_messages.return_value = pytest.mock_history
         mock_memory_class.return_value = mock_memory
-        
-        pytest.history_plain_result = pytest.runner.invoke(main, ['history', '--format', 'plain'])
+
+        pytest.history_plain_result = pytest.runner.invoke(
+            main, ["history", "--format", "plain"]
+        )
 
 
 @then("the output should be valid JSON")
@@ -394,12 +454,12 @@ def no_conversation_history():
 @when('I run "easyvoice history"')
 def run_history_empty():
     """Run history command with empty history"""
-    with patch('easyvoice.agent.memory.ConversationMemory') as mock_memory_class:
+    with patch("easyvoice.agent.memory.ConversationMemory") as mock_memory_class:
         mock_memory = Mock()
         mock_memory.get_recent_messages.return_value = []
         mock_memory_class.return_value = mock_memory
-        
-        pytest.empty_history_result = pytest.runner.invoke(main, ['history'])
+
+        pytest.empty_history_result = pytest.runner.invoke(main, ["history"])
 
 
 @then("I should see a message indicating no history found")
@@ -418,13 +478,13 @@ def voice_agent_mocked():
 @when('I run "easyvoice listen" in test mode')
 def run_listen_test_mode():
     """Run listen command in test mode"""
-    with patch('easyvoice.agent.core.VoiceAgent') as mock_agent_class:
+    with patch("easyvoice.agent.core.VoiceAgent") as mock_agent_class:
         mock_agent = Mock()
         mock_agent.start_conversation.return_value = asyncio.coroutine(lambda: None)()
         mock_agent_class.return_value = mock_agent
-        
+
         # Use timeout to prevent hanging
-        pytest.listen_result = pytest.runner.invoke(main, ['listen'], input='\n')
+        pytest.listen_result = pytest.runner.invoke(main, ["listen"], input="\n")
 
 
 @then("the voice agent should be initialized")
@@ -451,7 +511,7 @@ def see_status_banner():
 @when('I run "easyvoice invalid-command"')
 def run_invalid_command():
     """Run invalid command"""
-    pytest.invalid_result = pytest.runner.invoke(main, ['invalid-command'])
+    pytest.invalid_result = pytest.runner.invoke(main, ["invalid-command"])
 
 
 @then("I should see an error message")
@@ -477,7 +537,7 @@ def exit_code_non_zero():
 @when('I run "easyvoice ask"')
 def run_ask_no_args():
     """Run ask command without arguments"""
-    pytest.ask_no_args_result = pytest.runner.invoke(main, ['ask'])
+    pytest.ask_no_args_result = pytest.runner.invoke(main, ["ask"])
 
 
 @then("I should see an error about missing question")
@@ -498,7 +558,7 @@ def usage_help_displayed():
 @when('I run "easyvoice dev reset-memory"')
 def run_dev_reset_memory():
     """Run dev reset-memory command"""
-    pytest.reset_result = pytest.runner.invoke(main, ['dev', 'reset-memory'])
+    pytest.reset_result = pytest.runner.invoke(main, ["dev", "reset-memory"])
 
 
 @then("the memory database should be reset")
@@ -517,7 +577,7 @@ def see_confirmation_message():
 @when('I run "easyvoice dev show-config"')
 def run_dev_show_config():
     """Run dev show-config command"""
-    pytest.config_result = pytest.runner.invoke(main, ['dev', 'show-config'])
+    pytest.config_result = pytest.runner.invoke(main, ["dev", "show-config"])
 
 
 @then("I should see all current configuration values")

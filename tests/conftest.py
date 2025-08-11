@@ -24,9 +24,9 @@ def temp_db_path() -> Generator[Path, None, None]:
     """Temporary database path for testing"""
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = Path(tmp.name)
-    
+
     yield db_path
-    
+
     # Cleanup
     if db_path.exists():
         db_path.unlink()
@@ -39,15 +39,12 @@ def test_settings(temp_db_path: Path) -> Settings:
         # Audio - use smaller values for testing
         sample_rate=8000,
         chunk_size=512,
-        
         # LLM - shorter timeouts for tests
         model_name="test-model",
         max_tokens=100,
-        
         # Memory - use test database
         max_messages=5,  # Smaller for testing
         db_path=str(temp_db_path),
-        
         # Shorter timeouts for tests
         stt_timeout=5,
         tts_timeout=3,
@@ -105,14 +102,14 @@ def sample_audio_data() -> bytes:
     """Sample audio data for testing"""
     # Generate simple sine wave-like data
     import numpy as np
-    
+
     sample_rate = 16000
     duration = 1.0  # 1 second
     frequency = 440  # A4 note
-    
+
     t = np.linspace(0, duration, int(sample_rate * duration))
     audio = np.sin(2 * np.pi * frequency * t) * 0.5
-    
+
     # Convert to 16-bit PCM
     audio_int16 = (audio * 32767).astype(np.int16)
     return audio_int16.tobytes()
@@ -123,9 +120,17 @@ def sample_conversation_history() -> list[dict]:
     """Sample conversation history for testing"""
     return [
         {"role": "user", "content": "Hello", "timestamp": "2025-01-01T10:00:00"},
-        {"role": "assistant", "content": "Hi there!", "timestamp": "2025-01-01T10:00:01"},
+        {
+            "role": "assistant",
+            "content": "Hi there!",
+            "timestamp": "2025-01-01T10:00:01",
+        },
         {"role": "user", "content": "How are you?", "timestamp": "2025-01-01T10:00:02"},
-        {"role": "assistant", "content": "I'm doing well, thank you!", "timestamp": "2025-01-01T10:00:03"},
+        {
+            "role": "assistant",
+            "content": "I'm doing well, thank you!",
+            "timestamp": "2025-01-01T10:00:03",
+        },
     ]
 
 
@@ -133,7 +138,7 @@ def sample_conversation_history() -> list[dict]:
 def memory_database(temp_db_path: Path) -> sqlite3.Connection:
     """Create test memory database with schema"""
     conn = sqlite3.connect(temp_db_path)
-    
+
     # Create schema
     conn.execute("""
         CREATE TABLE conversations (
@@ -144,7 +149,7 @@ def memory_database(temp_db_path: Path) -> sqlite3.Connection:
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    
+
     conn.commit()
     return conn
 
@@ -160,7 +165,7 @@ def voice_agent():
     return agent
 
 
-@pytest.fixture  
+@pytest.fixture
 def audio_pipeline():
     """Mock audio pipeline for BDD tests"""
     pipeline = MagicMock()
@@ -168,6 +173,52 @@ def audio_pipeline():
     pipeline.last_transcription = None
     pipeline.last_synthesis = None
     return pipeline
+
+
+# Global test context for BDD tests (replaces storing on pytest module)
+@pytest.fixture
+def test_context():
+    """Test context for BDD step data sharing"""
+
+    class TestContext:
+        def __init__(self):
+            # Audio test data
+            self.recorded_audio = None
+            self.silence_recorded_audio = None
+            self.buffer_audio_data = None
+            self.microphone_test_result = None
+            self.audio_input = None
+            self.current_settings = None
+            self.audio_error = None
+
+            # Voice activity detection
+            self.vad = None
+            self.speech_detected = None
+            self.silence_detected = None
+
+            # Recording tasks
+            self.silence_recording_task = None
+            self.silence_recording_coroutine = None
+            self.timeout_task = None
+            self.timeout_coroutine = None
+            self.timeout_value = None
+            self.timeout_result = None
+
+            # Mock states
+            self.microphone_mock_active = False
+            self.microphone_unavailable = False
+
+            # CLI test data
+            self.cli_result = None
+            self.cli_output = None
+            self.exit_code = None
+
+            # Agent test data
+            self.agent_response = None
+            self.conversation_history = []
+            self.memory_count = 0
+
+    return TestContext()
 
 
 # Pytest markers for different test categories

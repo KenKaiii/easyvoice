@@ -14,11 +14,13 @@ easyvoice/agent/__init__.py
 easyvoice/agent/core.py
 easyvoice/agent/llm.py
 easyvoice/agent/llm_custom.py
+easyvoice/agent/llm_openai.py
 easyvoice/agent/memory.py
 easyvoice/agent/tools.py
 easyvoice/audio/__init__.py
 easyvoice/audio/input.py
 easyvoice/audio/stt.py
+easyvoice/audio/stt_openai.py
 easyvoice/audio/tts.py
 easyvoice/config/__init__.py
 easyvoice/config/settings.py

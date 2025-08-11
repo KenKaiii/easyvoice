@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import numpy as np
-import sounddevice as sd
-import soundfile as sf
+import sounddevice as sd  # type: ignore[import-untyped]
+import soundfile as sf  # type: ignore[import-untyped]
 
 from easyvoice.config.settings import Settings
 
@@ -60,7 +60,9 @@ class KittenTTS:
         """Load KittenTTS model synchronously (for thread pool)"""
         try:
             # Import KittenTTS here to avoid import errors if not installed
-            from kittentts import KittenTTS as KittenTTSModel
+            from kittentts import (
+                KittenTTS as KittenTTSModel,  # type: ignore[import-untyped]
+            )
 
             return KittenTTSModel(self.settings.tts_model)
 
@@ -132,30 +134,44 @@ class KittenTTS:
         try:
             # Generate audio using KittenTTS
             # KittenTTS returns audio at 24kHz sample rate
-            # Generate audio using the loaded model
-            if self.model is not None:
-                audio_data = self.model.generate(
-                    text, voice=voice_id
-                )  # type: ignore[misc]
-            else:
-                audio_data = None
+            if self.model is None:
+                logger.error("TTS model not loaded")
+                return None
 
-            if audio_data is None or len(audio_data) == 0:  # type: ignore[unreachable]
+            # Map voice ID to KittenTTS voice names
+            voice_map: Dict[int, str] = {  # type: ignore[unreachable]
+                0: "expr-voice-2-m",
+                1: "expr-voice-2-f",
+                2: "expr-voice-3-m",
+                3: "expr-voice-3-f",
+                4: "expr-voice-4-m",
+                5: "expr-voice-4-f",
+                6: "expr-voice-5-m",
+                7: "expr-voice-5-f",
+            }
+
+            voice_name = voice_map.get(voice_id, "expr-voice-2-m")
+            logger.debug(f"Using voice {voice_id} -> {voice_name}")
+
+            # Generate audio data
+            audio_data = self.model.generate(text, voice=voice_name)
+
+            if audio_data is None or len(audio_data) == 0:
                 logger.warning("TTS returned empty audio")
                 return None
 
-            # Ensure audio is float32  # type: ignore[unreachable]
+            # Ensure audio is float32
             if audio_data.dtype != np.float32:
                 audio_data = audio_data.astype(np.float32)
 
             # Apply speed adjustment if needed
-            if self.settings.tts_speed != 1.0:
+            if abs(self.settings.tts_speed - 1.0) > 0.001:
                 audio_data = self._adjust_speed(audio_data, self.settings.tts_speed)
 
             logger.info(
                 f"TTS generated {len(audio_data)} samples for text: '{text[:50]}...'"
             )
-            return np.ndarray(audio_data)
+            return audio_data
 
         except Exception as e:
             logger.error(f"Synchronous TTS failed: {e}")
@@ -172,7 +188,7 @@ class KittenTTS:
             Speed-adjusted audio data
         """
         try:
-            import librosa
+            import librosa  # type: ignore[import-not-found]
 
             return np.ndarray(
                 librosa.effects.time_stretch(audio_data, rate=speed_factor)
@@ -386,6 +402,28 @@ async def test_text_to_speech(
         return False
 
 
+async def _test_single_voice(
+    tts: "KittenTTS", voice_id: int, voice_name: str, text: str, verbose: bool
+) -> bool:
+    """Test a single voice"""
+    try:
+        if verbose:
+            print(f"Testing {voice_name} (ID: {voice_id})")
+
+        audio_data = await tts.synthesize_text(text, voice=voice_id)
+        success = audio_data is not None
+
+        if verbose:
+            status = "✓" if success else "✗"
+            print(f"  {status} {voice_name}")
+
+        return success
+    except Exception as e:
+        if verbose:
+            print(f"  ✗ {voice_name}: {e}")
+        return False
+
+
 async def test_all_voices(
     settings: Settings, text: str = "Testing voice", verbose: bool = False
 ) -> Dict[int, bool]:
@@ -399,33 +437,17 @@ async def test_all_voices(
     Returns:
         Dictionary mapping voice IDs to success status
     """
-    results = {}
-
     try:
         tts = KittenTTS(settings)
         voices = tts.get_available_voices()
 
+        results = {}
         for voice_id, voice_name in voices.items():
-            if verbose:
-                print(f"Testing {voice_name} (ID: {voice_id})")
+            results[voice_id] = await _test_single_voice(
+                tts, voice_id, voice_name, text, verbose
+            )
 
-            try:
-                # Test synthesis only (don't play to avoid noise)
-                audio_data = await tts.synthesize_text(text, voice=voice_id)
-                results[voice_id] = audio_data is not None
-
-                if verbose:
-                    status = "✓" if results[voice_id] else "✗"
-                    print(f"  {status} {voice_name}")
-
-            except Exception as e:
-                results[voice_id] = False
-                if verbose:
-                    print(f"  ✗ {voice_name}: {e}")
-
-        # Clean up
         await tts.close()
-
         return results
 
     except Exception as e:
@@ -458,7 +480,7 @@ async def benchmark_tts_performance(
         # Measure synthesis time
         synthesis_times = []
 
-        for i in range(3):  # Test 3 times for average
+        for _ in range(3):  # Test 3 times for average
             synthesis_start = time.time()
             audio_data = await tts.synthesize_text(test_text)
             synthesis_time = time.time() - synthesis_start

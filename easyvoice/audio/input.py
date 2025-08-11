@@ -9,7 +9,7 @@ from typing import Any, List, Optional
 import numpy as np
 
 try:
-    import sounddevice as sd
+    import sounddevice as sd  # type: ignore[import-untyped]
 
     HAS_SOUNDDEVICE = True
 except ImportError:
@@ -196,10 +196,10 @@ class AudioInput:
                 return np.array([])
 
             # Concatenate all audio chunks
-            audio_data = np.concatenate(self.audio_buffer)
+            audio_data: np.ndarray = np.concatenate(self.audio_buffer)
             self.audio_buffer.clear()
 
-            return np.ndarray(audio_data)
+            return audio_data
 
     async def record_for_duration(self, duration: float) -> np.ndarray:
         """Record audio for a specific duration
@@ -240,6 +240,7 @@ class AudioInput:
         try:
             start_time = time.time()
             last_speech_time = start_time
+            speech_detected = False
 
             while True:
                 # Check for timeout
@@ -255,10 +256,19 @@ class AudioInput:
                         # Check for voice activity
                         if self.vad.process_chunk(recent_chunk):
                             last_speech_time = time.time()
+                            speech_detected = True
 
-                # Check for silence duration
-                if time.time() - last_speech_time > silence_duration:
-                    logger.info("Silence detected, stopping recording")
+                # If no speech detected and we've waited enough, return empty
+                if not speech_detected and time.time() - start_time > 3.0:
+                    logger.info("No speech detected, returning empty")
+                    return np.array([])
+
+                # Check for silence duration after speech
+                if (
+                    speech_detected
+                    and time.time() - last_speech_time > silence_duration
+                ):
+                    logger.info("Silence detected after speech, stopping recording")
                     break
 
                 # Small delay to prevent tight loop

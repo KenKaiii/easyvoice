@@ -1,9 +1,25 @@
 """Configuration settings for EasyVoice CLI"""
 
 import os
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
+
+# Handle tomllib/tomli for different Python versions
+if sys.version_info >= (3, 11):
+    import tomllib  # type: ignore[import-not-found]
+else:
+    try:
+        import tomli as tomllib  # type: ignore[import-not-found]
+    except ImportError:
+        tomllib = None
+
+# Handle tomli_w for writing TOML files
+try:
+    import tomli_w  # type: ignore[import-not-found]
+except ImportError:
+    tomli_w = None
 
 
 @dataclass
@@ -44,7 +60,13 @@ class Settings:
     # Text-to-Speech (KittenTTS)
     tts_model: str = field(
         default_factory=lambda: os.getenv(
-            "EASYVOICE_TTS_MODEL", "/home/ken/.cache/huggingface/hub/models--KittenML--kitten-tts-nano-0.1/snapshots/ec0bae5fed153f8f9710ad541e73f427fafea9c5/kitten_tts_nano_v0_1.onnx"
+            "EASYVOICE_TTS_MODEL",
+            (
+                "/home/ken/.cache/huggingface/hub/models--KittenML--"
+                "kitten-tts-nano-0.1/snapshots/"
+                "ec0bae5fed153f8f9710ad541e73f427fafea9c5/"
+                "kitten_tts_nano_v0_1.onnx"
+            ),
         )
     )
     tts_voice: int = field(
@@ -201,7 +223,10 @@ class Settings:
         config_data = {}
 
         if config_file.suffix.lower() == ".toml":
-            import tomllib
+            if tomllib is None:
+                raise ImportError(
+                    "TOML support not available. Install with: pip install tomli"
+                )
 
             with open(config_file, "rb") as f:
                 config_data = tomllib.load(f)
@@ -246,13 +271,14 @@ class Settings:
         config_file.parent.mkdir(parents=True, exist_ok=True)
 
         if config_file.suffix.lower() == ".toml":
-            try:
-                import tomli_w
+            if tomli_w is None:
+                raise ImportError(
+                    "TOML writing support not available. "
+                    "Install with: pip install tomli_w"
+                )
 
-                with open(config_file, "wb") as f:
-                    tomli_w.dump(config_data, f)
-            except ImportError:
-                raise ValueError("tomli-w is required to save TOML config files")
+            with open(config_file, "wb") as f:
+                tomli_w.dump(config_data, f)
         elif config_file.suffix.lower() == ".json":
             import json
 
