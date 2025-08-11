@@ -145,3 +145,102 @@ settings.local.json
 
 # Memory files that may contain sensitive data
 memories.json
+memory_*.json
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.orig
+
+# Runtime logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor/IDE files
+*.sublime-project
+*.sublime-workspace
+.vscode/
+.idea/
+
+# Python cache and bytecode (additional patterns)
+.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+
+# Testing and coverage (additional)
+.coverage.*
+.cache/
+.tox/
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
+htmlcov/
+coverage.xml
+*.cover
+.coverage
+
+# Package build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+MANIFEST
+
+# Virtual environments (comprehensive)
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.virtualenv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Local development files
+config.local.*
+settings.local.*
+local_settings.*
+.local/
+
+# Audio/media files generated during testing or development
+*.wav
+*.mp3
+*.mp4
+*.avi
+*.flac
+*.ogg
+*.aac
+
+# Documentation builds
+docs/_build/
+docs/.doctrees/
+site/
+
+# Security/sensitive files
+.env.local
+.env.production
+*.key
+*.pem
+*.crt
+*.csr
+secrets.json
+config.json
+.secrets
