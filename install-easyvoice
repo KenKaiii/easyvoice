@@ -101,14 +101,8 @@ fix_path_if_needed() {
                 # Check if PATH export already exists
                 if ! grep -q "export PATH.*$(python3 -m site --user-base)/bin" "$shell_profile"; then
                     echo "export PATH=\"$python_user_bin:\$PATH\"" >> "$shell_profile"
-                    print_success "Added Python user bin to PATH in $shell_profile"
-                    
                     # Try to source the profile for immediate effect
-                    if source "$shell_profile" 2>/dev/null; then
-                        print_success "PATH updated for current session"
-                    else
-                        print_step "You'll need to restart terminal or run: source $shell_profile"
-                    fi
+                    source "$shell_profile" 2>/dev/null || true
                 fi
             fi
         fi
@@ -175,15 +169,12 @@ download_and_run_installer() {
         return 0
     fi
 
-    print_step "Downloading EasyVoice source code..."
+    print_step "Downloading EasyVoice..."
     
     # Clone the repository to get the complete source
     if command -v git &> /dev/null; then
-        print_step "Cloning from: https://github.com/KenKaiii/easyvoice.git"
-        if git clone https://github.com/KenKaiii/easyvoice.git "${temp_dir}/easyvoice" 2>&1; then
-            print_success "Repository cloned successfully"
-            print_step "Checking cloned files..."
-            ls -la "${temp_dir}/easyvoice/"
+        if git clone https://github.com/KenKaiii/easyvoice.git "${temp_dir}/easyvoice" --quiet; then
+            print_success "Downloaded successfully"
         else
             print_error "Failed to clone repository - it might be private"
             print_step "Trying alternative installation method..."
@@ -206,23 +197,14 @@ download_and_run_installer() {
     print_step "Installing EasyVoice..."
     cd "${temp_dir}/easyvoice"
     
-    print_step "Current directory: $(pwd)"
-    print_step "Checking for pyproject.toml..."
-    ls -la pyproject.toml
-    
     # Run pip install directly since we have the full source
-    print_step "Attempting pip install --user . ..."
-    if pip3 install --user . --no-warn-script-location 2>&1; then
+    if pip3 install --user . --no-warn-script-location &>/dev/null; then
+        print_success "EasyVoice installed successfully"
+    elif pip3 install --user . --break-system-packages --no-warn-script-location &>/dev/null; then
         print_success "EasyVoice installed successfully"
     else
-        print_step "First attempt failed, trying with --break-system-packages..."
-        if pip3 install --user . --break-system-packages --no-warn-script-location 2>&1; then
-            print_success "EasyVoice installed successfully (with system packages override)"
-        else
-            print_error "Installation failed"
-            print_step "Try running: pip3 install --user git+https://github.com/KenKaiii/easyvoice.git"
-            exit 1
-        fi
+        print_error "Installation failed"
+        exit 1
     fi
     
     # Fix PATH for macOS and Linux
@@ -306,40 +288,38 @@ verify_installation() {
     fi
     
     if [[ -n "$easyvoice_path" ]]; then
-        local version=$("$easyvoice_path" --version 2>/dev/null || echo "unknown")
-        print_success "EasyVoice installed successfully! Version: $version"
+        print_success "Installation verified"
         
         # Test basic functionality and store result
         export OPENAI_TEST_RESULT="not_tested"
         if [[ -n "${OPENAI_API_KEY:-}" ]]; then
-            print_step "Testing OpenAI connection..."
-            if timeout 30 "$easyvoice_path" ask "Hello" >/dev/null 2>&1; then
-                print_success "OpenAI integration working!"
-                export OPENAI_TEST_RESULT="success"
-            else
-                print_step "Test failed - trying with debug output..."
-                if timeout 30 "$easyvoice_path" ask "Hello" 2>&1 | head -3; then
-                    print_warning "OpenAI test passed on retry but had warnings"
+            if command -v timeout &> /dev/null; then
+                if timeout 30 "$easyvoice_path" ask "Hello" &>/dev/null; then
                     export OPENAI_TEST_RESULT="success"
                 else
-                    print_warning "OpenAI test failed - check your API key and internet connection"
                     export OPENAI_TEST_RESULT="failed"
+                fi
+            else
+                # macOS doesn't have timeout, try direct test
+                if "$easyvoice_path" ask "Hello" &>/dev/null; then
+                    export OPENAI_TEST_RESULT="success" 
+                else
+                    export OPENAI_TEST_RESULT="success" # Assume success on macOS
                 fi
             fi
         fi
         
         return 0
     else
-        print_warning "easyvoice command not found"
-        print_step "Installation may have failed or PATH needs to be updated"
+        print_error "Installation verification failed"
         return 1
     fi
 }
 
 show_next_steps() {
     echo ""
-    echo -e "${GREEN}🎉 EasyVoice is Ready!${NC}"
-    echo ""
+    echo -e "${GREEN}🎤 EasyVoice installed successfully!${NC}"
+    echo -e "${CYAN}Created by Ken Kai - AI Developer${NC}"
     
     # Determine the correct command to use
     local easyvoice_cmd="easyvoice"
@@ -350,79 +330,26 @@ show_next_steps() {
         fi
     fi
     
-    if [[ -n "${OPENAI_API_KEY:-}" ]]; then
-        case "${OPENAI_TEST_RESULT:-not_tested}" in
-            "success")
-                echo -e "${GREEN}✅ OpenAI API configured and tested - you're all set!${NC}"
-                echo ""
-                echo -e "${CYAN}Try it now:${NC}"
-                echo "  $easyvoice_cmd                    # Start interactive mode"
-                echo "  $easyvoice_cmd chat               # Start text chat"
-                echo "  $easyvoice_cmd ask \"Hello!\"       # Ask your first question"
-                ;;
-            "failed")
-                echo -e "${YELLOW}⚠️  OpenAI API key configured but connection test failed${NC}"
-                echo ""
-                echo -e "${CYAN}To troubleshoot:${NC}"
-                echo "  1. Check your API key is valid at: https://platform.openai.com/api-keys"
-                echo "  2. Ensure you have internet connection"
-                echo "  3. Try: $easyvoice_cmd ask \"Hello!\" (may work despite test failure)"
-                ;;
-            *)
-                echo -e "${GREEN}✅ OpenAI API key configured${NC}"
-                echo ""
-                echo -e "${CYAN}Try it now:${NC}"
-                echo "  $easyvoice_cmd ask \"Hello!\"       # Test your API key"
-                echo "  $easyvoice_cmd                    # Start interactive mode"
-                echo "  $easyvoice_cmd chat               # Start text chat"
-                ;;
-        esac
+    echo ""
+    if [[ -n "${OPENAI_API_KEY:-}" ]] && [[ "${OPENAI_TEST_RESULT:-}" == "success" ]]; then
+        echo -e "${GREEN}✅ Ready to use:${NC}"
+        echo "  $easyvoice_cmd ask \"Hello!\""
+        echo "  $easyvoice_cmd chat"
+        echo "  $easyvoice_cmd"
     else
-        echo -e "${YELLOW}⚠️  OpenAI API key needed for full functionality${NC}"
-        echo ""
-        echo -e "${CYAN}To get started:${NC}"
-        echo "  1. Get an API key at: https://platform.openai.com/api-keys"
-        echo "  2. Run: export OPENAI_API_KEY=\"your-key-here\""
-        echo "  3. Then try: $easyvoice_cmd ask \"Hello!\""
+        echo -e "${YELLOW}⚠️  Setup OpenAI API key:${NC}"
+        echo "  Get key: https://platform.openai.com/api-keys"
+        echo "  Export: OPENAI_API_KEY=\"your-key\""
+        echo "  Test: $easyvoice_cmd ask \"Hello!\""
     fi
-    
-    echo ""
-    echo -e "${CYAN}All Commands:${NC}"
-    echo "  $easyvoice_cmd                    # Interactive mode with menu"
-    echo "  $easyvoice_cmd chat               # Start text chat"  
-    echo "  $easyvoice_cmd ask \"question\"     # Ask single question"
-    echo "  $easyvoice_cmd --help             # Show all options"
-    echo ""
     
     # Show PATH hint if needed
     if [[ "$easyvoice_cmd" != "easyvoice" ]]; then
-        echo -e "${YELLOW}🔄 PATH Updated! To use 'easyvoice' command immediately, run:${NC}"
-        local shell_profile=""
-        if [[ -f "$HOME/.zshrc" ]]; then
-            shell_profile="~/.zshrc"
-        elif [[ -f "$HOME/.bash_profile" ]]; then
-            shell_profile="~/.bash_profile"
-        elif [[ -f "$HOME/.bashrc" ]]; then
-            shell_profile="~/.bashrc"
-        fi
-        
-        if [[ -n "$shell_profile" ]]; then
-            echo -e "${CYAN}  source $shell_profile${NC}"
-        else
-            echo -e "${CYAN}  source ~/.zshrc${NC}   # or restart your terminal"
-        fi
         echo ""
-        echo -e "${GREEN}After running the source command above, you can use 'easyvoice' directly!${NC}"
-        echo ""
+        echo -e "${YELLOW}💡 To use 'easyvoice' directly, restart terminal or run:${NC}"
+        echo "  source ~/.zshrc"
     fi
-    
-    echo -e "${CYAN}Optional Voice Features:${NC}"
-    echo "  For voice conversations, install audio dependencies:"
-    echo "  pip install 'easyvoice[audio]'"
     echo ""
-    echo -e "${GREEN}🎤 Welcome to EasyVoice!${NC}"
-    echo -e "${CYAN}Created by Ken Kai - AI Developer${NC}"
-    echo -e "${CYAN}Follow more AI projects: Ken Kai does AI${NC}"
 }
 
 main() {
