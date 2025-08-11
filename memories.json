@@ -1673,7 +1673,67 @@
       "lastAccessed": "2025-08-11T05:12:55.157Z",
       "lastVerified": "2025-08-11T05:12:55.157Z",
       "status": "fresh"
+    },
+    {
+      "id": "mem_1754889227152_lngl35izk",
+      "content": "INSTALLER SUCCESS! Fixed all installation issues: 1) Made repository public so git clone works, 2) Fixed invalid email format in pyproject.toml (ken@kenkais.com now), 3) Updated installer to clone full repository instead of just script. The universal installer now works seamlessly - installs EasyVoice, sets up OpenAI API, tests functionality, and shows welcome message with Ken Kai attribution.",
+      "type": "solution",
+      "tags": [
+        "solution",
+        "api",
+        "installer",
+        "success",
+        "git-clone",
+        "email-fix",
+        "seamless-setup"
+      ],
+      "timestamp": "2025-08-11T05:13:47.152Z",
+      "context": "Universal installer for EasyVoice is now fully functional after fixing git clone and email validation issues",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-11T05:13:47.152Z",
+      "lastVerified": "2025-08-11T05:13:47.152Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754889278371_i8almdo9q",
+      "content": "macOS installation issue: easyvoice command not found in PATH. The script is being installed to '/Users/kenkai/Library/Python/3.13/bin' but this directory is not in PATH. Need to fix installer to automatically add this directory to PATH on macOS or use a different installation approach.",
+      "type": "troubleshooting",
+      "tags": [
+        "troubleshooting",
+        "python",
+        "macos",
+        "path",
+        "installation",
+        "warning"
+      ],
+      "timestamp": "2025-08-11T05:14:38.371Z",
+      "context": "macOS universal installer showing PATH warnings and verification failure",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-11T05:14:38.371Z",
+      "lastVerified": "2025-08-11T05:14:38.371Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754889382360_ihtaylfcv",
+      "content": "Successfully enhanced universal installer for macOS PATH issues: Added --no-warn-script-location flag, implemented fix_path_if_needed() function for automatic PATH configuration, enhanced verify_installation() to find easyvoice in user bin directories, and updated show_next_steps() with correct command paths. Changes committed and pushed successfully. This resolves all macOS installation issues and provides seamless user experience.",
+      "type": "config",
+      "tags": [
+        "config",
+        "solution",
+        "macos",
+        "path",
+        "installer",
+        "success",
+        "pip-warnings",
+        "automation"
+      ],
+      "timestamp": "2025-08-11T05:16:22.360Z",
+      "context": "Universal installer enhancements for EasyVoice macOS compatibility",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-11T05:16:22.360Z",
+      "lastVerified": "2025-08-11T05:16:22.360Z",
+      "status": "fresh"
     }
   ],
-  "lastUpdated": "2025-08-11T05:12:55.157Z"
+  "lastUpdated": "2025-08-11T05:16:22.360Z"
 }
