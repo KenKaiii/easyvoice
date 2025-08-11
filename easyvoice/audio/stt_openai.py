@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
-import soundfile as sf  # type: ignore[import-untyped]
+import soundfile as sf
 
 try:
     from openai import AsyncOpenAI

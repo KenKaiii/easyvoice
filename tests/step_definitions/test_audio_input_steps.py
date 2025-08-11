@@ -1,10 +1,11 @@
 """Step definitions for audio input BDD scenarios"""
 
 import asyncio
-import pytest
-import numpy as np
 from unittest.mock import Mock, patch
-from pytest_bdd import scenarios, given, when, then, parsers
+
+import numpy as np
+import pytest
+from pytest_bdd import given, parsers, scenarios, then, when
 
 from easyvoice.audio.input import AudioInput, VoiceActivityDetector, test_microphone
 

@@ -4,8 +4,8 @@ import asyncio
 import sqlite3
 import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock
 from typing import AsyncGenerator, Generator
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from click.testing import CliRunner
@@ -212,6 +212,39 @@ def test_context():
             self.cli_result = None
             self.cli_output = None
             self.exit_code = None
+            self.runner = None
+            self.test_settings = None
+
+            # Command results
+            self.version_result = None
+            self.help_result = None
+            self.test_audio_result = None
+            self.verbose_result = None
+            self.ask_result = None
+            self.ask_voice_result = None
+            self.ask_save_result = None
+            self.history_result = None
+            self.history_limit_result = None
+            self.history_json_result = None
+            self.history_plain_result = None
+            self.empty_history_result = None
+            self.listen_result = None
+            self.invalid_result = None
+            self.ask_no_args_result = None
+            self.reset_result = None
+            self.config_result = None
+
+            # Mock data
+            self.mock_agent = None
+            self.mock_agent_tts = None
+            self.mock_tts = None
+            self.mock_memory = None
+            self.mock_history = []
+            self.mock_fifteen_history = []
+            self.empty_history = []
+            self.mock_voice_agent = None
+            self.audio_patches = []
+            self.agent_patch_active = False
 
             # Agent test data
             self.agent_response = None

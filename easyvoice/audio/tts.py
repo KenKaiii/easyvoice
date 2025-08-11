@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import numpy as np
-import sounddevice as sd  # type: ignore[import-untyped]
-import soundfile as sf  # type: ignore[import-untyped]
+import sounddevice as sd
+import soundfile as sf
 
 from easyvoice.config.settings import Settings
 
@@ -60,9 +60,7 @@ class KittenTTS:
         """Load KittenTTS model synchronously (for thread pool)"""
         try:
             # Import KittenTTS here to avoid import errors if not installed
-            from kittentts import (
-                KittenTTS as KittenTTSModel,  # type: ignore[import-untyped]
-            )
+            from kittentts import KittenTTS as KittenTTSModel
 
             return KittenTTSModel(self.settings.tts_model)
 
@@ -188,7 +186,7 @@ class KittenTTS:
             Speed-adjusted audio data
         """
         try:
-            import librosa  # type: ignore[import-not-found]
+            import librosa
 
             return np.ndarray(
                 librosa.effects.time_stretch(audio_data, rate=speed_factor)

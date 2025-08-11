@@ -1,10 +1,10 @@
 """Step definitions for speech recognition BDD scenarios"""
 
-import asyncio
-import pytest
+from unittest.mock import Mock, patch
+
 import numpy as np
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
-from pytest_bdd import scenarios, given, when, then, parsers
+import pytest
+from pytest_bdd import given, scenarios, then, when
 
 # Handle missing dependencies gracefully for test collection
 try:
@@ -16,14 +16,12 @@ except ImportError as e:
     import warnings
     warnings.warn(f"WhisperSTT not available for testing: {e}")
 
-from easyvoice.config.settings import Settings
-
 # Load scenarios from feature file
 scenarios('../features/speech_recognition.feature')
 
 # Skip marker for when Whisper is not available
 whisper_required = pytest.mark.skipif(
-    not WHISPER_AVAILABLE, 
+    not WHISPER_AVAILABLE,
     reason="WhisperSTT dependencies not available"
 )
 
@@ -43,7 +41,7 @@ def model_loading_mocked():
     pytest.mock_whisper_model = Mock()
     pytest.mock_whisper_model.transcribe.return_value = {"text": "Hello world"}
     pytest.mock_whisper_model.is_multilingual = True
-    
+
     # Mock the model loading
     with patch('whisper.load_model', return_value=pytest.mock_whisper_model):
         pytest.whisper_patch_active = True
@@ -94,20 +92,20 @@ def clear_speech_audio():
     sample_rate = 16000
     duration = 2.0
     samples = int(sample_rate * duration)
-    
+
     # Create a complex waveform that simulates speech
     t = np.linspace(0, duration, samples)
-    
+
     # Multiple frequencies to simulate speech formants
     f1, f2, f3 = 500, 1500, 2500  # Typical formant frequencies
     audio = (np.sin(2 * np.pi * f1 * t) * 0.3 +
-             np.sin(2 * np.pi * f2 * t) * 0.2 + 
+             np.sin(2 * np.pi * f2 * t) * 0.2 +
              np.sin(2 * np.pi * f3 * t) * 0.1)
-    
+
     # Add some envelope to make it more speech-like
     envelope = np.exp(-3 * np.abs(t - duration/2))
     audio = audio * envelope
-    
+
     pytest.clear_audio_data = audio.astype(np.float32)
 
 
@@ -145,10 +143,12 @@ def operation_within_timeout():
 async def transcribe_empty_audio():
     """Try to transcribe empty audio data"""
     empty_audio = np.array([])
-    pytest.empty_transcription_result = await pytest.whisper_stt.transcribe_audio_data(empty_audio)
+    pytest.empty_transcription_result = await pytest.whisper_stt.transcribe_audio_data(
+        empty_audio
+    )
 
 
-@then("the transcription should return None")  
+@then("the transcription should return None")
 def transcription_returns_none():
     """Verify transcription returns None for empty audio"""
     assert pytest.empty_transcription_result is None
@@ -157,10 +157,10 @@ def transcription_returns_none():
 @then("an appropriate warning should be logged")
 def warning_logged(caplog):
     """Verify appropriate warning was logged"""
-    warning_found = any("empty" in record.message.lower() or 
-                       "failed" in record.message.lower() 
-                       for record in caplog.records 
-                       if record.levelname in ["WARNING", "ERROR"])
+    warning_found = any("empty" in record.message.lower() or
+                        "failed" in record.message.lower()
+                        for record in caplog.records
+                        if record.levelname in ["WARNING", "ERROR"])
     assert warning_found
 
 
@@ -172,7 +172,7 @@ def transcription_takes_long():
         import time
         time.sleep(10)  # Simulate slow transcription
         return {"text": "This took too long"}
-    
+
     pytest.mock_whisper_model.transcribe.side_effect = slow_transcribe
 
 
@@ -181,11 +181,11 @@ async def transcribe_with_short_timeout(test_settings):
     """Try transcription with very short timeout"""
     # Set very short timeout
     test_settings.stt_timeout = 1
-    
+
     with patch('whisper.load_model', return_value=pytest.mock_whisper_model):
         stt = WhisperSTT(test_settings)
         await stt.load_model()
-        
+
         # Generate some test audio
         test_audio = np.random.random(16000).astype(np.float32)
         pytest.timeout_result = await stt.transcribe_audio_data(test_audio)
@@ -200,9 +200,9 @@ def operation_timeouts_gracefully():
 @then("a timeout error should be logged")
 def timeout_error_logged(caplog):
     """Verify timeout error was logged"""
-    timeout_logged = any("timeout" in record.message.lower() 
-                        for record in caplog.records 
-                        if record.levelname == "ERROR")
+    timeout_logged = any("timeout" in record.message.lower()
+                         for record in caplog.records
+                         if record.levelname == "ERROR")
     assert timeout_logged
 
 
@@ -218,22 +218,24 @@ async def transcribe_different_formats():
     """Transcribe audio in different formats"""
     # Generate base audio data
     base_audio = np.random.random(8000) * 0.5  # 0.5 second of audio
-    
+
     pytest.format_results = {}
-    
+
     # Test float32 format
     float32_audio = base_audio.astype(np.float32)
     result = await pytest.whisper_stt.transcribe_audio_data(float32_audio)
     pytest.format_results["float32"] = "success" if result is not None else "failed"
-    
-    # Test int16 format  
+
+    # Test int16 format
     int16_audio = (base_audio * 32767).astype(np.int16)
     result = await pytest.whisper_stt.transcribe_audio_data(int16_audio)
     pytest.format_results["int16"] = "success" if result is not None else "failed"
-    
+
     # Test normalized format
     normalized_audio = base_audio / np.max(np.abs(base_audio))
-    result = await pytest.whisper_stt.transcribe_audio_data(normalized_audio.astype(np.float32))
+    result = await pytest.whisper_stt.transcribe_audio_data(
+        normalized_audio.astype(np.float32)
+    )
     pytest.format_results["normalized"] = "success" if result is not None else "failed"
 
 
@@ -252,10 +254,10 @@ def multilingual_audio_samples():
     # Mock different language responses
     pytest.mock_whisper_model.transcribe.side_effect = [
         {"text": "Hello world", "language": "en"},
-        {"text": "Hola mundo", "language": "es"}, 
+        {"text": "Hola mundo", "language": "es"},
         {"text": "Bonjour monde", "language": "fr"}
     ]
-    
+
     # Generate sample audio data for each language
     pytest.multilingual_samples = [
         np.random.random(8000).astype(np.float32),
@@ -268,16 +270,22 @@ def multilingual_audio_samples():
 async def transcribe_without_language():
     """Transcribe samples without specifying language"""
     pytest.language_results = []
-    
+
     for i, audio_sample in enumerate(pytest.multilingual_samples):
         # Reset mock for each call
         if i == 0:
-            pytest.mock_whisper_model.transcribe.return_value = {"text": "Hello world", "language": "en"}
+            pytest.mock_whisper_model.transcribe.return_value = {
+                "text": "Hello world", "language": "en"
+            }
         elif i == 1:
-            pytest.mock_whisper_model.transcribe.return_value = {"text": "Hola mundo", "language": "es"}
+            pytest.mock_whisper_model.transcribe.return_value = {
+                "text": "Hola mundo", "language": "es"
+            }
         else:
-            pytest.mock_whisper_model.transcribe.return_value = {"text": "Bonjour monde", "language": "fr"}
-            
+            pytest.mock_whisper_model.transcribe.return_value = {
+                "text": "Bonjour monde", "language": "fr"
+            }
+
         result = await pytest.whisper_stt.transcribe_audio_data(audio_sample)
         pytest.language_results.append(result)
 
@@ -294,7 +302,8 @@ def text_in_detected_language():
     """Verify text is returned in detected language"""
     expected_texts = ["Hello world", "Hola mundo", "Bonjour monde"]
     for i, expected in enumerate(expected_texts):
-        assert expected in pytest.language_results[i] or pytest.language_results[i] is not None
+        assert (expected in pytest.language_results[i] or
+                pytest.language_results[i] is not None)
 
 
 # Step definitions for model information

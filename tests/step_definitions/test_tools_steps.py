@@ -1,9 +1,9 @@
 """Step definitions for tools system BDD scenarios"""
 
-import pytest
 import asyncio
-from unittest.mock import Mock, patch
-from pytest_bdd import scenarios, given, when, then, parsers
+
+import pytest
+from pytest_bdd import given, scenarios, then, when
 
 # Load scenarios from feature file
 scenarios('../features/tools.feature')
@@ -59,7 +59,9 @@ def response_includes_time():
 @when('the user asks "How much memory is being used?"')
 async def ask_memory_usage():
     """Ask about memory usage"""
-    pytest.tool_result = await pytest.tools_system.execute_tool("system_info", {"info_type": "memory"})
+    pytest.tool_result = await pytest.tools_system.execute_tool(
+        "system_info", {"info_type": "memory"}
+    )
     pytest.tools_called.append("system_info")
 
 
@@ -73,7 +75,8 @@ def system_info_tool_called():
 def should_get_memory_data():
     """Verify we get memory usage data"""
     assert pytest.tool_result is not None
-    assert "memory" in str(pytest.tool_result).lower() or "mb" in str(pytest.tool_result).lower()
+    result_str = str(pytest.tool_result).lower()
+    assert "memory" in result_str or "mb" in result_str
 
 
 @then("the response should be formatted properly")
@@ -92,7 +95,9 @@ def slow_tool_available():
 async def call_slow_tool():
     """Call slow tool with short timeout"""
     try:
-        pytest.tool_result = await pytest.tools_system.execute_tool("slow_tool", timeout=1)
+        pytest.tool_result = await pytest.tools_system.execute_tool(
+            "slow_tool", timeout=1
+        )
         pytest.tool_error = None
     except asyncio.TimeoutError as e:
         pytest.tool_error = e
@@ -160,7 +165,9 @@ def suggest_alternatives():
 async def ask_time_and_performance():
     """Ask about time and performance"""
     pytest.time_result = await pytest.tools_system.execute_tool("time")
-    pytest.system_result = await pytest.tools_system.execute_tool("system_info", {"info_type": "performance"})
+    pytest.system_result = await pytest.tools_system.execute_tool(
+        "system_info", {"info_type": "performance"}
+    )
     pytest.tools_called.extend(["time", "system_info"])
 
 
@@ -183,8 +190,10 @@ def register_custom_tool():
     """Register a new custom tool"""
     def custom_func():
         return "Custom tool result"
-    
-    pytest.tools_system.register_tool("custom_tool", custom_func, description="A custom test tool")
+
+    pytest.tools_system.register_tool(
+        "custom_tool", custom_func, description="A custom test tool"
+    )
 
 
 @then("it should be available for use")
@@ -211,7 +220,9 @@ async def callable_by_agent():
 @when('the user asks "What\'s the weather in Paris?"')
 async def ask_weather_paris():
     """Ask about weather in Paris"""
-    pytest.tool_result = await pytest.tools_system.execute_tool("weather", {"location": "Paris"})
+    pytest.tool_result = await pytest.tools_system.execute_tool(
+        "weather", {"location": "Paris"}
+    )
     pytest.tools_called.append("weather")
 
 
@@ -227,7 +238,10 @@ def tool_returns_weather_data():
     """Verify weather data returned"""
     assert pytest.tool_result is not None
     result_str = str(pytest.tool_result).lower()
-    assert "weather" in result_str or "temperature" in result_str or "paris" in result_str
+    assert (
+        "weather" in result_str or "temperature" in result_str or
+        "paris" in result_str
+    )
 
 
 @then("the response should be location-specific")
@@ -242,9 +256,11 @@ async def slow_tool_func():
     await asyncio.sleep(5)
     return "Slow result"
 
+
 def failing_tool_func():
     """Failing tool for error testing"""
     raise Exception("Tool failed intentionally")
+
 
 # Store mock functions in pytest namespace
 pytest.slow_tool_func = slow_tool_func

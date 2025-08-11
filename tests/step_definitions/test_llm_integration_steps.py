@@ -1,12 +1,12 @@
 """Step definitions for LLM integration BDD scenarios"""
 
-import pytest
 import asyncio
-from unittest.mock import Mock, patch
-from pytest_bdd import scenarios, given, when, then, parsers
+
+import pytest
+from pytest_bdd import given, scenarios, then, when
 
 # Load scenarios from feature file
-scenarios('../features/llm_integration.feature')
+scenarios("../features/llm_integration.feature")
 
 # Global test state
 pytest.llm_system = None
@@ -18,8 +18,9 @@ pytest.conversation_context = None
 @given("the LLM system is initialized with test settings")
 def llm_system_initialized(test_settings):
     """Initialize the LLM system"""
-    from easyvoice.agent.llm import LLMInterface
-    pytest.llm_system = LLMInterface(test_settings)
+    from easyvoice.agent.llm_custom import CustomLLMInterface
+
+    pytest.llm_system = CustomLLMInterface(test_settings)
 
 
 @given("Ollama is available for testing")
@@ -61,7 +62,7 @@ def have_conversation_history():
     pytest.conversation_context = [
         {"role": "user", "content": "Hello"},
         {"role": "assistant", "content": "Hi there!"},
-        {"role": "user", "content": "How are you?"}
+        {"role": "user", "content": "How are you?"},
     ]
 
 
@@ -69,8 +70,7 @@ def have_conversation_history():
 async def send_followup_message():
     """Send follow-up message with context"""
     pytest.llm_response = await pytest.llm_system.generate_response(
-        "What did we just discuss?", 
-        context=pytest.conversation_context
+        "What did we just discuss?", context=pytest.conversation_context
     )
 
 
@@ -98,11 +98,10 @@ def llm_responds_slowly():
 async def send_with_short_timeout(test_settings):
     """Send message with short timeout"""
     test_settings.llm_timeout = 1  # Very short timeout
-    
+
     try:
         pytest.llm_response = await pytest.llm_system.generate_response(
-            "This will timeout", 
-            timeout=1
+            "This will timeout", timeout=1
         )
         pytest.llm_error = None
     except asyncio.TimeoutError as e:
@@ -156,7 +155,9 @@ def should_get_connection_error():
 def error_message_informative():
     """Verify error message is informative"""
     error_msg = str(pytest.llm_error).lower()
-    assert any(word in error_msg for word in ["connection", "ollama", "unavailable", "failed"])
+    assert any(
+        word in error_msg for word in ["connection", "ollama", "unavailable", "failed"]
+    )
 
 
 @when("I check the LLM configuration")
@@ -191,10 +192,10 @@ def temperature_valid_range():
 async def send_with_streaming():
     """Send message with streaming enabled"""
     pytest.stream_chunks = []
-    
+
     async for chunk in pytest.llm_system.generate_response_stream("Tell me a story"):
         pytest.stream_chunks.append(chunk)
-    
+
     pytest.final_response = "".join(pytest.stream_chunks)
 
 

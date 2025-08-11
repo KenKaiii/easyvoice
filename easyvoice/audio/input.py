@@ -9,7 +9,7 @@ from typing import Any, List, Optional
 import numpy as np
 
 try:
-    import sounddevice as sd  # type: ignore[import-untyped]
+    import sounddevice as sd
 
     HAS_SOUNDDEVICE = True
 except ImportError:

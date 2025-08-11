@@ -15,16 +15,28 @@ Lightweight voice agent CLI with real-time audio processing and tool calling cap
 
 ## 🚀 Quick Start
 
-### Option 1: Automated Installation (Recommended)
+### One-Command Installation (Recommended)
 
 **Linux/macOS:**
 ```bash
-curl -sSL https://raw.githubusercontent.com/easyvoice/easyvoice/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/your-username/easyvoice/main/install-easyvoice | bash
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/easyvoice/easyvoice/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/your-username/easyvoice/main/install-easyvoice.ps1 | iex
+```
+
+### Alternative: Platform-Specific Installers
+
+**Linux/macOS:**
+```bash
+curl -sSL https://raw.githubusercontent.com/your-username/easyvoice/main/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/your-username/easyvoice/main/install.ps1 | iex
 ```
 
 **Windows (Command Prompt):**

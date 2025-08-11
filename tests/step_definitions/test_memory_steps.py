@@ -1,8 +1,7 @@
 """Step definitions for memory BDD scenarios"""
 
 import pytest
-from pytest_bdd import scenarios, given, when, then, parsers
-from datetime import datetime
+from pytest_bdd import given, scenarios, then, when
 
 # Load scenarios from feature file
 scenarios('../features/memory.feature')
@@ -61,7 +60,7 @@ def have_20_messages():
     for i in range(20):
         role = "user" if i % 2 == 0 else "assistant"
         pytest.memory_system.add_message(role, f"Message {i+1}")
-    
+
     assert pytest.memory_system.get_message_count() == 20
 
 
@@ -99,7 +98,7 @@ def have_5_exchanges():
     for i in range(5):
         pytest.memory_system.add_message("user", f"User message {i+1}")
         pytest.memory_system.add_message("assistant", f"Assistant response {i+1}")
-    
+
     assert pytest.memory_system.get_message_count() == 10
 
 
@@ -113,7 +112,7 @@ def request_conversation_history():
 def get_10_messages_chronological():
     """Verify we get 10 messages in order"""
     assert len(pytest.conversation_history) == 10
-    
+
     # Check chronological order (first message should be oldest)
     for i in range(len(pytest.conversation_history) - 1):
         current_time = pytest.conversation_history[i]["timestamp"]
@@ -138,7 +137,7 @@ def have_10_messages():
     for i in range(10):
         role = "user" if i % 2 == 0 else "assistant"
         pytest.memory_system.add_message(role, f"Message {i+1}")
-    
+
     assert pytest.memory_system.get_message_count() == 10
 
 

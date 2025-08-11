@@ -1,9 +1,7 @@
 """Step definitions for conversation flow BDD scenarios"""
 
 import pytest
-import asyncio
-from unittest.mock import Mock, patch
-from pytest_bdd import scenarios, given, when, then, parsers
+from pytest_bdd import given, scenarios, then, when
 
 # Load scenarios from feature file
 scenarios('../features/conversation_flow.feature')
@@ -35,7 +33,9 @@ def all_components_ready():
 async def speak_hello():
     """Simulate speaking to the agent"""
     pytest.spoken_text = "Hello, how are you today?"
-    pytest.agent_response = await pytest.voice_agent.process_voice_input(pytest.spoken_text)
+    pytest.agent_response = await pytest.voice_agent.process_voice_input(
+        pytest.spoken_text
+    )
 
 
 @then("the agent should transcribe my speech")
@@ -64,7 +64,7 @@ def save_messages_to_memory():
     """Verify both messages were saved"""
     memory = pytest.voice_agent.get_memory()
     recent_messages = memory.get_recent_messages(limit=2)
-    
+
     assert len(recent_messages) == 2
     assert recent_messages[0]["role"] == "user"
     assert recent_messages[0]["content"] == "Hello, how are you today?"
@@ -77,7 +77,9 @@ def have_previous_history():
     """Setup previous conversation history"""
     memory = pytest.voice_agent.get_memory()
     memory.add_message("user", "What's the weather like?")
-    memory.add_message("assistant", "I'd need to check a weather service for current conditions.")
+    memory.add_message(
+        "assistant", "I'd need to check a weather service for current conditions."
+    )
     pytest.conversation_history = memory.get_recent_messages()
 
 
@@ -99,8 +101,12 @@ def agent_uses_context():
 @then("provide a relevant response")
 def provide_relevant_response():
     """Verify response is relevant to context"""
-    # In a real implementation, this would check if response references previous messages
-    assert "weather" in pytest.followup_response.lower() or len(pytest.followup_response) > 0
+    # In a real implementation, this would check if response references
+    # previous messages
+    assert (
+        "weather" in pytest.followup_response.lower()
+        or len(pytest.followup_response) > 0
+    )
 
 
 @then("maintain conversation continuity")
@@ -121,7 +127,9 @@ def stt_system_fails():
 async def try_speak_to_agent():
     """Try to speak when STT fails"""
     try:
-        pytest.agent_response = await pytest.voice_agent.process_voice_input("Test message")
+        pytest.agent_response = await pytest.voice_agent.process_voice_input(
+            "Test message"
+        )
         pytest.error_message = None
     except Exception as e:
         pytest.error_message = str(e)
@@ -132,7 +140,10 @@ async def try_speak_to_agent():
 def should_get_error_message():
     """Verify we get an appropriate error message"""
     assert pytest.error_message is not None
-    assert "speech" in pytest.error_message.lower() or "stt" in pytest.error_message.lower()
+    assert (
+        "speech" in pytest.error_message.lower()
+        or "stt" in pytest.error_message.lower()
+    )
 
 
 @then("the agent should remain in listening mode")
@@ -157,7 +168,9 @@ def voice_input_not_available():
 @when('I send a text message "Process this as text"')
 async def send_text_message():
     """Send text message instead of voice"""
-    pytest.text_response = await pytest.voice_agent.process_text_input("Process this as text")
+    pytest.text_response = await pytest.voice_agent.process_text_input(
+        "Process this as text"
+    )
 
 
 @then("the agent should process it normally")
@@ -178,7 +191,7 @@ def save_interaction_to_memory():
     """Verify interaction saved to memory"""
     memory = pytest.voice_agent.get_memory()
     messages = memory.get_recent_messages(limit=2)
-    
+
     assert any(msg["content"] == "Process this as text" for msg in messages)
 
 
@@ -211,10 +224,10 @@ def messages_stored_in_order():
     """Verify all messages stored in chronological order"""
     memory = pytest.voice_agent.get_memory()
     messages = memory.get_recent_messages()
-    
+
     # Should have at least 6 messages (3 user + 3 assistant)
     assert len(messages) >= 6
-    
+
     # Verify chronological order
     for i in range(len(messages) - 1):
         assert messages[i]["timestamp"] <= messages[i + 1]["timestamp"]
@@ -274,7 +287,9 @@ def can_start_new_conversation():
 @when('I ask "What time is it?"')
 async def ask_time():
     """Ask for current time"""
-    pytest.time_response = await pytest.voice_agent.process_text_input("What time is it?")
+    pytest.time_response = await pytest.voice_agent.process_text_input(
+        "What time is it?"
+    )
 
 
 @then("the agent should use the time tool")
@@ -304,6 +319,6 @@ def save_tool_usage():
     """Verify tool usage saved to memory"""
     memory = pytest.voice_agent.get_memory()
     messages = memory.get_recent_messages(limit=2)
-    
+
     # Verify both user question and assistant response with tool usage
     assert len(messages) >= 2

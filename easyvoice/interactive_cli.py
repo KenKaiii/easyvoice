@@ -66,24 +66,25 @@ class InteractiveCLI:
         console.print(panel)
 
     def show_menu(self) -> None:
-        """Show main menu"""
+        """Show main menu with numbered options"""
         table = Table(
-            title="Available Commands", show_header=False, border_style="blue"
+            title="🎤 EasyVoice - Main Menu", show_header=False, border_style="cyan"
         )
-        table.add_column("Command", style=STYLE_BOLD_GREEN, width=20)
+        table.add_column("Option", style=STYLE_BOLD_GREEN, width=8, justify="center")
         table.add_column("Description", style="white")
 
-        table.add_row("chat", "Start text conversation")
-        table.add_row("voice", "Start voice conversation (requires audio)")
-        table.add_row("ask", "Ask a single question")
-        table.add_row("history", "View conversation history")
-        table.add_row("status", "Show system status")
-        table.add_row("test", "Test audio system")
-        table.add_row("config", "Show configuration")
-        table.add_row("help", "Show this menu")
-        table.add_row("quit", "Exit EasyVoice")
+        table.add_row("1", "🎤 Voice conversation (audio required)")
+        table.add_row("2", "💬 Chat conversation (text)")
+        table.add_row("3", "❓ Ask single question")
+        table.add_row("4", "📝 View conversation history")
+        table.add_row("5", "⚙️  Show system status")
+        table.add_row("6", "🚪 Exit EasyVoice")
 
         console.print(table)
+        console.print(
+            "[dim]Enter option number, or type: voice, chat, ask, history, "
+            "status, quit[/dim]"
+        )
         console.print()
 
     async def initialize_agent(self) -> None:
@@ -617,28 +618,36 @@ class InteractiveCLI:
         elif command in ["help", "h", "?"]:
             self.show_menu()
         else:
-            console.print(
-                f"Unknown command: '{command}'. Type 'help' for available commands.",
-                style="red",
-            )
+            console.print(f"❌ Invalid option: '{command}'", style="red")
+            self.show_menu()
         return True
 
     async def run(self) -> None:
         """Run the interactive CLI"""
         self.print_banner()
-        console.print(
-            "Welcome to EasyVoice! Type 'help' to see available commands.\n",
-            style=STYLE_BOLD_GREEN,
-        )
+        self.show_menu()
 
         while self.running:
             try:
-                command = (
-                    Prompt.ask(f"[{STYLE_BOLD_BLUE}]easyvoice", default="help")
+                user_input = (
+                    Prompt.ask(f"[{STYLE_BOLD_BLUE}]Select option", default="1")
                     .strip()
                     .lower()
                 )
                 console.print()
+
+                # Map numeric inputs to commands
+                command_map = {
+                    "1": "voice",
+                    "2": "chat",
+                    "3": "ask",
+                    "4": "history",
+                    "5": "status",
+                    "6": "quit",
+                }
+
+                # Use mapped command or original input
+                command = command_map.get(user_input, user_input)
 
                 if not await self._process_command(command):
                     break

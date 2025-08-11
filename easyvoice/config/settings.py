@@ -11,13 +11,13 @@ if sys.version_info >= (3, 11):
     import tomllib  # type: ignore[import-not-found]
 else:
     try:
-        import tomli as tomllib  # type: ignore[import-not-found]
+        import tomli as tomllib
     except ImportError:
         tomllib = None
 
 # Handle tomli_w for writing TOML files
 try:
-    import tomli_w  # type: ignore[import-not-found]
+    import tomli_w
 except ImportError:
     tomli_w = None
 
