@@ -1617,7 +1617,63 @@
       "lastAccessed": "2025-08-11T05:07:42.843Z",
       "lastVerified": "2025-08-11T05:07:42.843Z",
       "status": "fresh"
+    },
+    {
+      "id": "mem_1754889085500_9xdgkun59",
+      "content": "Added debug output and fallback installation method to installer. If git clone fails (likely due to private repo), it will now try pip install git+https:// method as backup. Also added verbose output to see what's happening during clone.",
+      "type": "config",
+      "tags": [
+        "config",
+        "installer",
+        "debug",
+        "fallback",
+        "private-repo"
+      ],
+      "timestamp": "2025-08-11T05:11:25.500Z",
+      "context": "Troubleshooting installer failure - may be due to private repository access",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-11T05:11:25.500Z",
+      "lastVerified": "2025-08-11T05:11:25.500Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754889123379_dasq6wgrt",
+      "content": "Fixed pyproject.toml email validation error. The email \"kenkai@ai\" was invalid (not a proper email format), causing pip install to fail with \"configuration error: `project.authors[0].email` must be idn-email\". Changed to \"ken.kai@example.com\" to fix the validation.",
+      "type": "config",
+      "tags": [
+        "config",
+        "pyproject",
+        "email-validation",
+        "pip-install",
+        "fix"
+      ],
+      "timestamp": "2025-08-11T05:12:03.379Z",
+      "context": "pip install was failing due to invalid email format in pyproject.toml",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-11T05:12:03.379Z",
+      "lastVerified": "2025-08-11T05:12:03.379Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754889175157_e6rqi6s6w",
+      "content": "Successfully fixed and deployed pyproject.toml email validation issue. Changed invalid email \"kenkai@ai\" to correct \"ken@kenkais.com\" in pyproject.toml. Commit d1e21af pushed to GitHub. This resolves pip install failures due to invalid email format validation. Also included enhanced installer with debug output and fallback methods.",
+      "type": "config",
+      "tags": [
+        "config",
+        "git",
+        "pyproject",
+        "email-validation",
+        "pip-install",
+        "deployment",
+        "fix"
+      ],
+      "timestamp": "2025-08-11T05:12:55.157Z",
+      "context": "Fixed critical installation blocker - email validation in pyproject.toml was preventing pip install from working",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-11T05:12:55.157Z",
+      "lastVerified": "2025-08-11T05:12:55.157Z",
+      "status": "fresh"
     }
   ],
-  "lastUpdated": "2025-08-11T05:07:42.843Z"
+  "lastUpdated": "2025-08-11T05:12:55.157Z"
 }
