@@ -21,7 +21,7 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Repository information
-REPO_URL="https://raw.githubusercontent.com/your-username/easyvoice/main"
+REPO_URL="https://raw.githubusercontent.com/KenKaiii/easyvoice/main"
 PROJECT_NAME="EasyVoice"
 
 # Helper functions

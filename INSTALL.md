@@ -6,12 +6,12 @@ The easiest way to install EasyVoice is using our universal installer that autom
 
 ### Linux/macOS
 ```bash
-curl -sSL https://raw.githubusercontent.com/your-username/easyvoice/main/install-easyvoice | bash
+curl -sSL https://raw.githubusercontent.com/KenKaiii/easyvoice/main/install-easyvoice | bash
 ```
 
 ### Windows (PowerShell)
 ```powershell
-irm https://raw.githubusercontent.com/your-username/easyvoice/main/install-easyvoice.ps1 | iex
+irm https://raw.githubusercontent.com/KenKaiii/easyvoice/main/install-easyvoice.ps1 | iex
 ```
 
 ## What the Installer Does

@@ -10,7 +10,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Repository information
-$RepoUrl = "https://raw.githubusercontent.com/your-username/easyvoice/main"
+$RepoUrl = "https://raw.githubusercontent.com/KenKaiii/easyvoice/main"
 $ProjectName = "EasyVoice"
 
 # Helper functions
