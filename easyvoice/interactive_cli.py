@@ -326,7 +326,7 @@ class InteractiveCLI:
         """Record audio with push-to-talk (space bar)"""
         import sys, termios, tty
         
-        console.print("🎤 [bold green]Hold SPACE and speak, release when done[/bold green]")
+        console.print("🎤 [bold green]Hold TAB and speak, release when done[/bold green]")
         
         # Get original terminal settings
         fd = sys.stdin.fileno()
@@ -336,18 +336,18 @@ class InteractiveCLI:
             tty.cbreak(fd)
             
             while True:
-                # Wait for space key press
+                # Wait for TAB key press
                 key = sys.stdin.read(1)
-                if key == ' ':
-                    console.print("🔴 [bold red]Recording...[/bold red] (release SPACE to stop)")
+                if key == '\t':  # TAB character
+                    console.print("🔴 [bold red]Recording...[/bold red] (release TAB to stop)")
                     
                     # Start recording
                     await audio_input.start_recording()
                     
-                    # Wait for space key release
+                    # Wait for TAB key release (actually wait for any other key)
                     while True:
                         key = sys.stdin.read(1)
-                        if key == ' ':
+                        if key != '\t':
                             break
                         await asyncio.sleep(0.1)
                     
@@ -612,7 +612,7 @@ class InteractiveCLI:
         console.print("🎤 Starting voice conversation mode", style=STYLE_BOLD_BLUE)
         
         if self.settings.push_to_talk:
-            console.print("Press [bold green]SPACE[/bold green] to talk, [bold red]Ctrl+C[/bold red] to exit\n", style="dim")
+            console.print("Hold [bold green]TAB[/bold green] to talk, [bold red]Ctrl+C[/bold red] to exit\n", style="dim")
         else:
             console.print("Say something to start... (Ctrl+C to exit)\n", style="dim")
 
