@@ -157,8 +157,15 @@ class KittenTTS:
         """Synthesize using espeak"""
         import subprocess
         import tempfile
+        import shutil
         
         try:
+            # Check if espeak is available
+            if not shutil.which('espeak'):
+                logger.warning("espeak not found, falling back to text-only mode")
+                print(f"🔊 TTS would say: '{text}'")
+                return None
+                
             # Create temporary file for audio output
             with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp_file:
                 tmp_path = tmp_file.name
@@ -175,6 +182,7 @@ class KittenTTS:
             
             if result.returncode != 0:
                 logger.error(f"espeak failed: {result.stderr}")
+                print(f"🔊 TTS would say: '{text}'")
                 return None
             
             # Load the generated audio
@@ -195,9 +203,11 @@ class KittenTTS:
                 
         except subprocess.TimeoutExpired:
             logger.error("espeak synthesis timed out")
+            print(f"🔊 TTS would say: '{text}'")
             return None
         except Exception as e:
             logger.error(f"espeak synthesis failed: {e}")
+            print(f"🔊 TTS would say: '{text}'")
             return None
 
     def _synthesize_kitten_tts(self, text: str, voice_id: int) -> Optional[np.ndarray]:
