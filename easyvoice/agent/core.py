@@ -25,7 +25,15 @@ class VoiceAgent:
         """
         self.settings = settings
         self.memory = ConversationMemory(settings)
-        self.llm = CustomLLMInterface(settings)
+
+        # Initialize LLM based on provider
+        if settings.llm_provider == "openai":
+            from easyvoice.agent.llm_openai import OpenAIInterface
+
+            self.llm = OpenAIInterface(settings)
+        else:
+            self.llm = CustomLLMInterface(settings)
+
         self.tools = ToolsManager(settings)
 
         # Component availability tracking
@@ -92,7 +100,7 @@ class VoiceAgent:
             Exception: If STT system is not available
         """
         if not self.stt_available:
-            raise Exception("Speech recognition system is not available")
+            raise RuntimeError("Speech recognition system is not available")
 
         # Store transcription
         self.last_transcription = spoken_text
@@ -135,6 +143,7 @@ class VoiceAgent:
 
         # Get conversation context
         context_messages = self.memory.get_recent_messages(limit=10)
+        logger.debug(f"Retrieved context messages: {context_messages}")
 
         # Generate response using LLM with tools
         response = await self.llm.generate_with_tools(

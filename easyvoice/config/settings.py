@@ -44,7 +44,7 @@ class Settings:
     # Text-to-Speech (KittenTTS)
     tts_model: str = field(
         default_factory=lambda: os.getenv(
-            "EASYVOICE_TTS_MODEL", "KittenML/kitten-tts-nano-0.1"
+            "EASYVOICE_TTS_MODEL", "/home/ken/.cache/huggingface/hub/models--KittenML--kitten-tts-nano-0.1/snapshots/ec0bae5fed153f8f9710ad541e73f427fafea9c5/kitten_tts_nano_v0_1.onnx"
         )
     )
     tts_voice: int = field(
@@ -55,6 +55,15 @@ class Settings:
     )
 
     # LLM Configuration
+    llm_provider: str = field(
+        default_factory=lambda: os.getenv("EASYVOICE_LLM_PROVIDER", "openai")
+    )
+    openai_api_key: Optional[str] = field(
+        default_factory=lambda: os.getenv("OPENAI_API_KEY")
+    )
+    openai_model: str = field(
+        default_factory=lambda: os.getenv("EASYVOICE_OPENAI_MODEL", "gpt-5-nano")
+    )
     model_name: str = field(
         default_factory=lambda: os.getenv("EASYVOICE_MODEL_NAME", "llama3.2")
     )
@@ -64,7 +73,7 @@ class Settings:
         )
     )
     max_tokens: int = field(
-        default_factory=lambda: int(os.getenv("EASYVOICE_MAX_TOKENS", "500"))
+        default_factory=lambda: int(os.getenv("EASYVOICE_MAX_TOKENS", "2000"))
     )
     temperature: float = field(
         default_factory=lambda: float(os.getenv("EASYVOICE_TEMPERATURE", "0.7"))
