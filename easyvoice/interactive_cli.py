@@ -524,9 +524,14 @@ class InteractiveCLI:
     async def _transcribe_audio(self, audio_data: np.ndarray) -> Optional[str]:
         """Transcribe audio data to text"""
         try:
-            from easyvoice.audio.stt import WhisperSTT
-
-            stt = WhisperSTT(self.settings)
+            # Use OpenAI API for fast transcription, fallback to local Whisper
+            if self.settings.stt_provider.lower() == "openai" and self.settings.openai_api_key:
+                from easyvoice.audio.stt_openai import OpenAIWhisperSTT
+                stt = OpenAIWhisperSTT(self.settings)
+            else:
+                from easyvoice.audio.stt import WhisperSTT
+                stt = WhisperSTT(self.settings)
+            
             user_text = await stt.transcribe_audio_data(audio_data)
             if not user_text or not user_text.strip():
                 return None
@@ -557,9 +562,14 @@ class InteractiveCLI:
 
         # Process audio through STT
         try:
-            from easyvoice.audio.stt import WhisperSTT
+            # Use OpenAI API for fast transcription, fallback to local Whisper
+            if self.settings.stt_provider.lower() == "openai" and self.settings.openai_api_key:
+                from easyvoice.audio.stt_openai import OpenAIWhisperSTT
+                stt = OpenAIWhisperSTT(self.settings)
+            else:
+                from easyvoice.audio.stt import WhisperSTT
+                stt = WhisperSTT(self.settings)
 
-            stt = WhisperSTT(self.settings)
             user_text = await stt.transcribe_audio_data(audio_data)
             if not user_text or not user_text.strip():
                 console.print("No speech detected, continuing...", style="dim")
