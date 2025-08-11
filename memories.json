@@ -1733,7 +1733,46 @@
       "lastAccessed": "2025-08-11T05:16:22.360Z",
       "lastVerified": "2025-08-11T05:16:22.360Z",
       "status": "fresh"
+    },
+    {
+      "id": "mem_1754889410270_eb2tl2zig",
+      "content": "Fixed macOS installer PATH issues: 1) Added --no-warn-script-location to suppress pip warnings, 2) Added fix_path_if_needed() function that automatically adds Python user bin directory to PATH and shell profile, 3) Enhanced verify_installation() to find easyvoice even if not in PATH, 4) Updated show_next_steps() to show correct command path and provide PATH restoration hints. This ensures seamless installation on macOS without any warnings.",
+      "type": "code",
+      "tags": [
+        "code",
+        "python",
+        "macos",
+        "path-fix",
+        "installer",
+        "no-warnings",
+        "seamless"
+      ],
+      "timestamp": "2025-08-11T05:16:50.270Z",
+      "context": "macOS installer was showing PATH warnings and verification failures",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-11T05:16:50.270Z",
+      "lastVerified": "2025-08-11T05:16:50.270Z",
+      "status": "fresh"
+    },
+    {
+      "id": "mem_1754889473870_qweqf5w11",
+      "content": "macOS installer still showing warnings and PATH issues despite fixes. The --no-warn-script-location flag isn't suppressing the uninstall warning, and the PATH fix function isn't being called or working properly. Need to debug why fix_path_if_needed() isn't working and why verification still fails.",
+      "type": "warning",
+      "tags": [
+        "warning",
+        "macos",
+        "installer",
+        "debugging",
+        "path",
+        "warnings"
+      ],
+      "timestamp": "2025-08-11T05:17:53.870Z",
+      "context": "Updated installer still has warnings on macOS despite supposed fixes",
+      "accessCount": 0,
+      "lastAccessed": "2025-08-11T05:17:53.870Z",
+      "lastVerified": "2025-08-11T05:17:53.870Z",
+      "status": "fresh"
     }
   ],
-  "lastUpdated": "2025-08-11T05:16:22.360Z"
+  "lastUpdated": "2025-08-11T05:17:53.870Z"
 }
