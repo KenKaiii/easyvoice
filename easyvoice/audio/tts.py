@@ -268,24 +268,29 @@ class KittenTTS:
             return None
 
     def _adjust_speed(self, audio_data: np.ndarray, speed_factor: float) -> np.ndarray:
-        """Adjust audio playback speed
+        """Adjust audio playback speed (simplified without librosa)
 
         Args:
             audio_data: Input audio data
             speed_factor: Speed multiplier (1.0 = normal, 2.0 = 2x faster)
 
         Returns:
-            Speed-adjusted audio data
+            Speed-adjusted audio data (simplified - just return original for now)
         """
-        try:
-            import librosa
-
-            return np.ndarray(
-                librosa.effects.time_stretch(audio_data, rate=speed_factor)
-            )
-        except ImportError:
-            logger.warning("librosa not available, speed adjustment disabled")
+        # Simple speed adjustment by skipping samples (basic but works)
+        if abs(speed_factor - 1.0) < 0.001:
             return audio_data
+            
+        try:
+            # Basic speed adjustment by resampling every Nth sample
+            if speed_factor > 1.0:
+                # Faster: skip samples
+                step = int(speed_factor)
+                return audio_data[::step]
+            else:
+                # Slower: duplicate samples (simple approach)
+                repeat = int(1.0 / speed_factor)
+                return np.repeat(audio_data, repeat)
         except Exception as e:
             logger.warning(f"Speed adjustment failed: {e}")
             return audio_data
@@ -305,25 +310,8 @@ class KittenTTS:
                 logger.warning("No audio data to play")
                 return False
 
-            # KittenTTS outputs at 24kHz, but we might need to resample
-            tts_sample_rate = 24000
-
-            # Resample if needed to match our output settings
-            if tts_sample_rate != self.settings.sample_rate:
-                try:
-                    import librosa
-
-                    audio_data = librosa.resample(
-                        audio_data,
-                        orig_sr=tts_sample_rate,
-                        target_sr=self.settings.sample_rate,
-                    )
-                    sample_rate = self.settings.sample_rate
-                except ImportError:
-                    logger.warning("librosa not available, using original sample rate")
-                    sample_rate = tts_sample_rate
-            else:
-                sample_rate = tts_sample_rate
+            # KittenTTS outputs at 24kHz - use it directly for best quality
+            sample_rate = 24000
 
             # Play audio
             sd.play(audio_data, samplerate=sample_rate)
