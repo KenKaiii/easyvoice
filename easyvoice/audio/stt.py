@@ -9,9 +9,9 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import numpy as np
-import soundfile as sf
-import torch
-import whisper
+import soundfile as sf  # type: ignore[import-untyped]
+import torch  # type: ignore[import-not-found]
+import whisper  # type: ignore[import-not-found]
 
 from easyvoice.config.settings import Settings
 

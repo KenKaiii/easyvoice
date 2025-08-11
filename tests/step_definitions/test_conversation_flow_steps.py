@@ -4,7 +4,7 @@ import pytest
 from pytest_bdd import given, scenarios, then, when
 
 # Load scenarios from feature file
-scenarios('../features/conversation_flow.feature')
+scenarios("../features/conversation_flow.feature")
 
 # Global test state
 pytest.voice_agent = None
@@ -19,6 +19,7 @@ pytest.conversation_history = []
 def voice_agent_initialized(test_settings):
     """Initialize the complete voice agent system"""
     from easyvoice.agent.core import VoiceAgent
+
     pytest.voice_agent = VoiceAgent(test_settings)
 
 

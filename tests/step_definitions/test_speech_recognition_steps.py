@@ -9,20 +9,21 @@ from pytest_bdd import given, scenarios, then, when
 # Handle missing dependencies gracefully for test collection
 try:
     from easyvoice.audio.stt import WhisperSTT
+
     WHISPER_AVAILABLE = True
 except ImportError as e:
     WHISPER_AVAILABLE = False
     WhisperSTT = None
     import warnings
+
     warnings.warn(f"WhisperSTT not available for testing: {e}")
 
 # Load scenarios from feature file
-scenarios('../features/speech_recognition.feature')
+scenarios("../features/speech_recognition.feature")
 
 # Skip marker for when Whisper is not available
 whisper_required = pytest.mark.skipif(
-    not WHISPER_AVAILABLE,
-    reason="WhisperSTT dependencies not available"
+    not WHISPER_AVAILABLE, reason="WhisperSTT dependencies not available"
 )
 
 
@@ -43,7 +44,7 @@ def model_loading_mocked():
     pytest.mock_whisper_model.is_multilingual = True
 
     # Mock the model loading
-    with patch('whisper.load_model', return_value=pytest.mock_whisper_model):
+    with patch("whisper.load_model", return_value=pytest.mock_whisper_model):
         pytest.whisper_patch_active = True
 
 
@@ -54,7 +55,7 @@ async def load_whisper_model(test_settings):
     """Load the Whisper model"""
     if not WHISPER_AVAILABLE:
         pytest.skip("WhisperSTT dependencies not available")
-    with patch('whisper.load_model', return_value=pytest.mock_whisper_model):
+    with patch("whisper.load_model", return_value=pytest.mock_whisper_model):
         pytest.whisper_stt = WhisperSTT(test_settings)
         await pytest.whisper_stt.load_model()
 
@@ -80,7 +81,7 @@ async def whisper_model_loaded(test_settings):
     """Ensure Whisper model is loaded"""
     if not WHISPER_AVAILABLE:
         pytest.skip("WhisperSTT dependencies not available")
-    with patch('whisper.load_model', return_value=pytest.mock_whisper_model):
+    with patch("whisper.load_model", return_value=pytest.mock_whisper_model):
         pytest.whisper_stt = WhisperSTT(test_settings)
         await pytest.whisper_stt.load_model()
 
@@ -98,12 +99,14 @@ def clear_speech_audio():
 
     # Multiple frequencies to simulate speech formants
     f1, f2, f3 = 500, 1500, 2500  # Typical formant frequencies
-    audio = (np.sin(2 * np.pi * f1 * t) * 0.3 +
-             np.sin(2 * np.pi * f2 * t) * 0.2 +
-             np.sin(2 * np.pi * f3 * t) * 0.1)
+    audio = (
+        np.sin(2 * np.pi * f1 * t) * 0.3
+        + np.sin(2 * np.pi * f2 * t) * 0.2
+        + np.sin(2 * np.pi * f3 * t) * 0.1
+    )
 
     # Add some envelope to make it more speech-like
-    envelope = np.exp(-3 * np.abs(t - duration/2))
+    envelope = np.exp(-3 * np.abs(t - duration / 2))
     audio = audio * envelope
 
     pytest.clear_audio_data = audio.astype(np.float32)
@@ -157,10 +160,11 @@ def transcription_returns_none():
 @then("an appropriate warning should be logged")
 def warning_logged(caplog):
     """Verify appropriate warning was logged"""
-    warning_found = any("empty" in record.message.lower() or
-                        "failed" in record.message.lower()
-                        for record in caplog.records
-                        if record.levelname in ["WARNING", "ERROR"])
+    warning_found = any(
+        "empty" in record.message.lower() or "failed" in record.message.lower()
+        for record in caplog.records
+        if record.levelname in ["WARNING", "ERROR"]
+    )
     assert warning_found
 
 
@@ -168,8 +172,10 @@ def warning_logged(caplog):
 @given("transcription will take longer than timeout")
 def transcription_takes_long():
     """Mock transcription to take longer than timeout"""
+
     def slow_transcribe(*args, **kwargs):
         import time
+
         time.sleep(10)  # Simulate slow transcription
         return {"text": "This took too long"}
 
@@ -182,7 +188,7 @@ async def transcribe_with_short_timeout(test_settings):
     # Set very short timeout
     test_settings.stt_timeout = 1
 
-    with patch('whisper.load_model', return_value=pytest.mock_whisper_model):
+    with patch("whisper.load_model", return_value=pytest.mock_whisper_model):
         stt = WhisperSTT(test_settings)
         await stt.load_model()
 
@@ -200,9 +206,11 @@ def operation_timeouts_gracefully():
 @then("a timeout error should be logged")
 def timeout_error_logged(caplog):
     """Verify timeout error was logged"""
-    timeout_logged = any("timeout" in record.message.lower()
-                         for record in caplog.records
-                         if record.levelname == "ERROR")
+    timeout_logged = any(
+        "timeout" in record.message.lower()
+        for record in caplog.records
+        if record.levelname == "ERROR"
+    )
     assert timeout_logged
 
 
@@ -255,14 +263,14 @@ def multilingual_audio_samples():
     pytest.mock_whisper_model.transcribe.side_effect = [
         {"text": "Hello world", "language": "en"},
         {"text": "Hola mundo", "language": "es"},
-        {"text": "Bonjour monde", "language": "fr"}
+        {"text": "Bonjour monde", "language": "fr"},
     ]
 
     # Generate sample audio data for each language
     pytest.multilingual_samples = [
         np.random.random(8000).astype(np.float32),
         np.random.random(8000).astype(np.float32),
-        np.random.random(8000).astype(np.float32)
+        np.random.random(8000).astype(np.float32),
     ]
 
 
@@ -275,15 +283,18 @@ async def transcribe_without_language():
         # Reset mock for each call
         if i == 0:
             pytest.mock_whisper_model.transcribe.return_value = {
-                "text": "Hello world", "language": "en"
+                "text": "Hello world",
+                "language": "en",
             }
         elif i == 1:
             pytest.mock_whisper_model.transcribe.return_value = {
-                "text": "Hola mundo", "language": "es"
+                "text": "Hola mundo",
+                "language": "es",
             }
         else:
             pytest.mock_whisper_model.transcribe.return_value = {
-                "text": "Bonjour monde", "language": "fr"
+                "text": "Bonjour monde",
+                "language": "fr",
             }
 
         result = await pytest.whisper_stt.transcribe_audio_data(audio_sample)
@@ -302,8 +313,10 @@ def text_in_detected_language():
     """Verify text is returned in detected language"""
     expected_texts = ["Hello world", "Hola mundo", "Bonjour monde"]
     for i, expected in enumerate(expected_texts):
-        assert (expected in pytest.language_results[i] or
-                pytest.language_results[i] is not None)
+        assert (
+            expected in pytest.language_results[i]
+            or pytest.language_results[i] is not None
+        )
 
 
 # Step definitions for model information

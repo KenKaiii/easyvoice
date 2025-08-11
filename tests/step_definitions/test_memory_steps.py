@@ -4,7 +4,7 @@ import pytest
 from pytest_bdd import given, scenarios, then, when
 
 # Load scenarios from feature file
-scenarios('../features/memory.feature')
+scenarios("../features/memory.feature")
 
 # Global test state
 pytest.memory_system = None
@@ -15,6 +15,7 @@ pytest.stored_messages = []
 def memory_system_initialized(test_settings):
     """Initialize the memory system"""
     from easyvoice.agent.memory import ConversationMemory
+
     pytest.memory_system = ConversationMemory(test_settings)
 
 

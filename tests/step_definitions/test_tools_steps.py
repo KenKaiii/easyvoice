@@ -6,7 +6,7 @@ import pytest
 from pytest_bdd import given, scenarios, then, when
 
 # Load scenarios from feature file
-scenarios('../features/tools.feature')
+scenarios("../features/tools.feature")
 
 # Global test state
 pytest.tools_system = None
@@ -19,6 +19,7 @@ pytest.tools_called = []
 def tools_system_initialized(test_settings):
     """Initialize the tools system"""
     from easyvoice.agent.tools import ToolsManager
+
     pytest.tools_system = ToolsManager(test_settings)
 
 
@@ -188,6 +189,7 @@ def response_addresses_both():
 @when("I register a new custom tool")
 def register_custom_tool():
     """Register a new custom tool"""
+
     def custom_func():
         return "Custom tool result"
 
@@ -239,8 +241,7 @@ def tool_returns_weather_data():
     assert pytest.tool_result is not None
     result_str = str(pytest.tool_result).lower()
     assert (
-        "weather" in result_str or "temperature" in result_str or
-        "paris" in result_str
+        "weather" in result_str or "temperature" in result_str or "paris" in result_str
     )
 
 

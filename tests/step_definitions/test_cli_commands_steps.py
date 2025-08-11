@@ -132,9 +132,11 @@ def audio_system_mocked(test_context):
 @when('I run "easyvoice test-audio"')
 def run_test_audio_command(test_context):
     """Run the test-audio command"""
+
     # Mock the entire test_audio function to avoid import issues
     def mock_test_audio(ctx, duration, verbose):
         from rich.console import Console
+
         console = Console()
         console.print("🔧 Testing audio pipeline...", style="bold blue")
         console.print("1️⃣ Testing microphone input...")
@@ -189,9 +191,11 @@ def see_success_messages(test_context):
 @when('I run "easyvoice test-audio --verbose"')
 def run_test_audio_verbose(test_context):
     """Run test-audio with verbose output"""
+
     # Mock the entire test_audio function for verbose mode
     def mock_test_audio_verbose(ctx, duration, verbose):
         from rich.console import Console
+
         console = Console()
         console.print("🔧 Testing audio pipeline...", style="bold blue")
         console.print("1️⃣ Testing microphone input...")

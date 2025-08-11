@@ -9,7 +9,7 @@ from pytest_bdd import given, scenarios, then, when
 from easyvoice.audio.tts import KittenTTS
 
 # Load scenarios from feature file
-scenarios('../features/text_to_speech.feature')
+scenarios("../features/text_to_speech.feature")
 
 
 # Background steps
@@ -39,8 +39,10 @@ def tts_model_loading_mocked():
 @when("I load the KittenTTS model")
 async def load_kitten_model(test_settings):
     """Load the KittenTTS model"""
-    with patch('easyvoice.audio.tts.KittenTTS._load_model_sync',
-               return_value=pytest.mock_kitten_model):
+    with patch(
+        "easyvoice.audio.tts.KittenTTS._load_model_sync",
+        return_value=pytest.mock_kitten_model,
+    ):
         pytest.kitten_tts = KittenTTS(test_settings)
         await pytest.kitten_tts.load_model()
 
@@ -63,8 +65,10 @@ def tts_model_status_loaded():
 @given("the KittenTTS model is loaded")
 async def kitten_model_loaded(test_settings):
     """Ensure KittenTTS model is loaded"""
-    with patch('easyvoice.audio.tts.KittenTTS._load_model_sync',
-               return_value=pytest.mock_kitten_model):
+    with patch(
+        "easyvoice.audio.tts.KittenTTS._load_model_sync",
+        return_value=pytest.mock_kitten_model,
+    ):
         pytest.kitten_tts = KittenTTS(test_settings)
         await pytest.kitten_tts.load_model()
 
@@ -105,9 +109,11 @@ def synthesis_returns_none():
 @then("an appropriate warning should be logged")
 def tts_warning_logged(caplog):
     """Verify appropriate warning was logged"""
-    warning_found = any("empty" in record.message.lower()
-                        for record in caplog.records
-                        if record.levelname == "WARNING")
+    warning_found = any(
+        "empty" in record.message.lower()
+        for record in caplog.records
+        if record.levelname == "WARNING"
+    )
     assert warning_found
 
 
@@ -117,16 +123,13 @@ async def synthesize_different_voices():
     """Synthesize text with different voices"""
     pytest.voice_results = {}
 
-    voices_to_test = [
-        (0, "Male Voice 1"),
-        (4, "Female Voice 1"),
-        (7, "Female Voice 4")
-    ]
+    voices_to_test = [(0, "Male Voice 1"), (4, "Female Voice 1"), (7, "Female Voice 4")]
 
     for voice_id, voice_name in voices_to_test:
         # Mock different audio for each voice
-        unique_audio = (np.random.random(24000).astype(np.float32) *
-                        0.3 + voice_id * 0.01)
+        unique_audio = (
+            np.random.random(24000).astype(np.float32) * 0.3 + voice_id * 0.01
+        )
         pytest.mock_kitten_model.generate.return_value = unique_audio
 
         result = await pytest.kitten_tts.synthesize_text(
@@ -136,7 +139,7 @@ async def synthesize_different_voices():
         pytest.voice_results[voice_id] = {
             "name": voice_name,
             "result": result,
-            "success": result is not None
+            "success": result is not None,
         }
 
 
@@ -147,7 +150,7 @@ def voices_generate_unique_audio():
 
     # Check that all results are different (basic uniqueness test)
     for i, result1 in enumerate(results):
-        for j, result2 in enumerate(results[i+1:], i+1):
+        for j, result2 in enumerate(results[i + 1 :], i + 1):
             if result1 is not None and result2 is not None:
                 # Audio should be different (not exactly the same)
                 assert not np.array_equal(result1, result2)
@@ -178,8 +181,7 @@ async def synthesize_invalid_voice():
 def invalid_voice_error_raised():
     """Verify error was raised for invalid voice"""
     # Either an error was raised or the result is None (graceful handling)
-    assert (pytest.invalid_voice_error is not None or
-            pytest.invalid_voice_result is None)
+    assert pytest.invalid_voice_error is not None or pytest.invalid_voice_result is None
 
 
 @then("the error should mention invalid voice ID")
@@ -202,8 +204,7 @@ async def have_synthesized_audio():
 @when("I play the audio")
 async def play_audio():
     """Play the synthesized audio"""
-    with patch('sounddevice.play') as mock_play, \
-         patch('sounddevice.wait') as mock_wait:
+    with patch("sounddevice.play") as mock_play, patch("sounddevice.wait") as mock_wait:
 
         mock_play.return_value = None
         mock_wait.return_value = None
@@ -238,14 +239,12 @@ def speed_adjustment_set(test_settings):
 async def synthesize_speed_test():
     """Synthesize text with speed adjustment"""
     # Mock librosa for speed adjustment
-    with patch('librosa.effects.time_stretch') as mock_stretch:
+    with patch("librosa.effects.time_stretch") as mock_stretch:
         original_audio = pytest.mock_generated_audio
         faster_audio = original_audio[::2]  # Simple simulation of faster audio
         mock_stretch.return_value = faster_audio
 
-        pytest.speed_result = await pytest.kitten_tts.synthesize_text(
-            "Testing speed"
-        )
+        pytest.speed_result = await pytest.kitten_tts.synthesize_text("Testing speed")
 
 
 @then("the generated audio should be faster than normal")
@@ -267,13 +266,11 @@ def audio_duration_shorter():
 @when('I save the audio to "test_output.wav"')
 async def save_audio_file():
     """Save synthesized audio to file"""
-    with patch('soundfile.write') as mock_write, \
-         patch('pathlib.Path.mkdir'):
+    with patch("soundfile.write") as mock_write, patch("pathlib.Path.mkdir"):
 
         mock_write.return_value = None
         pytest.save_result = await pytest.kitten_tts.save_audio(
-            pytest.playback_audio_data,
-            "test_output.wav"
+            pytest.playback_audio_data, "test_output.wav"
         )
 
 
@@ -294,8 +291,10 @@ def file_contains_valid_audio():
 @given("synthesis will take longer than timeout")
 def synthesis_takes_long():
     """Mock synthesis to take longer than timeout"""
+
     def slow_synthesis(*args, **kwargs):
         import time
+
         time.sleep(10)  # Simulate slow synthesis
         return pytest.mock_generated_audio
 
@@ -308,14 +307,14 @@ async def synthesize_with_short_timeout(test_settings):
     # Set very short timeout
     test_settings.tts_timeout = 1
 
-    with patch('easyvoice.audio.tts.KittenTTS._load_model_sync',
-               return_value=pytest.mock_kitten_model):
+    with patch(
+        "easyvoice.audio.tts.KittenTTS._load_model_sync",
+        return_value=pytest.mock_kitten_model,
+    ):
         tts = KittenTTS(test_settings)
         await tts.load_model()
 
-        pytest.tts_timeout_result = await tts.synthesize_text(
-            "This will timeout"
-        )
+        pytest.tts_timeout_result = await tts.synthesize_text("This will timeout")
 
 
 @then("the operation should timeout gracefully")
@@ -327,9 +326,11 @@ def tts_operation_timeouts_gracefully():
 @then("a timeout error should be logged")
 def tts_timeout_error_logged(caplog):
     """Verify timeout error was logged"""
-    timeout_logged = any("timeout" in record.message.lower()
-                         for record in caplog.records
-                         if record.levelname == "ERROR")
+    timeout_logged = any(
+        "timeout" in record.message.lower()
+        for record in caplog.records
+        if record.levelname == "ERROR"
+    )
     assert timeout_logged
 
 
@@ -373,11 +374,12 @@ async def benchmark_tts_performance():
     """Benchmark TTS performance"""
     from easyvoice.audio.tts import benchmark_tts_performance
 
-    with patch('easyvoice.audio.tts.KittenTTS._load_model_sync',
-               return_value=pytest.mock_kitten_model):
+    with patch(
+        "easyvoice.audio.tts.KittenTTS._load_model_sync",
+        return_value=pytest.mock_kitten_model,
+    ):
         pytest.performance_metrics = await benchmark_tts_performance(
-            pytest.test_settings,
-            "Performance test text"
+            pytest.test_settings, "Performance test text"
         )
 
 
@@ -392,8 +394,7 @@ def get_timing_metrics():
 def real_time_factor_calculated():
     """Verify real-time factor is calculated"""
     assert "real_time_factor" in pytest.performance_metrics
-    assert isinstance(pytest.performance_metrics["real_time_factor"],
-                      (int, float))
+    assert isinstance(pytest.performance_metrics["real_time_factor"], (int, float))
 
 
 @then("model information should be included")

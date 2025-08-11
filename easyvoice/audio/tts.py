@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import numpy as np
-import sounddevice as sd
-import soundfile as sf
+import sounddevice as sd  # type: ignore[import-untyped]
+import soundfile as sf  # type: ignore[import-untyped]
 
 from easyvoice.config.settings import Settings
 
@@ -60,7 +60,7 @@ class KittenTTS:
         """Load KittenTTS model synchronously (for thread pool)"""
         try:
             # Import KittenTTS here to avoid import errors if not installed
-            from kittentts import KittenTTS as KittenTTSModel
+            from kittentts import KittenTTS as KittenTTSModel  # type: ignore
 
             # Let KittenTTS handle model download automatically
             if self.settings.tts_model == "auto":
@@ -141,9 +141,9 @@ class KittenTTS:
                 return None
 
             # Map voice ID to KittenTTS voice names
-            voice_map: Dict[int, str] = {
+            voice_map: Dict[int, str] = {  # type: ignore[unreachable]
                 0: "expr-voice-2-m",
-                1: "expr-voice-2-f", 
+                1: "expr-voice-2-f",
                 2: "expr-voice-3-m",
                 3: "expr-voice-3-f",
                 4: "expr-voice-4-m",
@@ -171,14 +171,14 @@ class KittenTTS:
                 audio_data = self._adjust_speed(audio_data, self.settings.tts_speed)
 
             logger.info(
-                f"KittenTTS generated {len(audio_data)} samples for text: '{text[:50]}...'"
+                f"KittenTTS generated {len(audio_data)} samples "
+                f"for text: '{text[:50]}...'"
             )
             return audio_data
 
         except Exception as e:
             logger.error(f"KittenTTS synthesis failed: {e}")
             return None
-
 
     def _adjust_speed(self, audio_data: np.ndarray, speed_factor: float) -> np.ndarray:
         """Adjust audio playback speed

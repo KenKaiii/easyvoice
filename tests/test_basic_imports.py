@@ -96,7 +96,7 @@ def run_all_tests():
         test_audio_input_imports,
         test_stt_imports,
         test_tts_imports,
-        test_cli_imports
+        test_cli_imports,
     ]
 
     results = []

@@ -35,7 +35,9 @@ def print_banner() -> None:
     subtitle = Text("Lightweight Voice Agent CLI", style="dim")
     author = Text("Created by Ken Kai - AI Developer", style="dim cyan")
 
-    panel = Panel.fit(f"{banner_text}\n{subtitle}\n{author}", border_style="cyan", padding=(0, 2))
+    panel = Panel.fit(
+        f"{banner_text}\n{subtitle}\n{author}", border_style="cyan", padding=(0, 2)
+    )
     console.print(panel)
 
 

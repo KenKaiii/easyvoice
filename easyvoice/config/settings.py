@@ -11,13 +11,13 @@ if sys.version_info >= (3, 11):
     import tomllib  # type: ignore[import-not-found]
 else:
     try:
-        import tomli as tomllib
+        import tomli as tomllib  # type: ignore[import-not-found]
     except ImportError:
         tomllib = None
 
 # Handle tomli_w for writing TOML files
 try:
-    import tomli_w
+    import tomli_w  # type: ignore[import-not-found]
 except ImportError:
     tomli_w = None
 
@@ -49,7 +49,8 @@ class Settings:
         default_factory=lambda: float(os.getenv("EASYVOICE_SILENCE_DURATION", "1.0"))
     )
     push_to_talk: bool = field(
-        default_factory=lambda: os.getenv("EASYVOICE_PUSH_TO_TALK", "true").lower() == "true"
+        default_factory=lambda: os.getenv("EASYVOICE_PUSH_TO_TALK", "true").lower()
+        == "true"
     )
 
     # Speech-to-Text (Whisper)
@@ -63,8 +64,7 @@ class Settings:
     # Text-to-Speech (KittenTTS)
     tts_model: str = field(
         default_factory=lambda: os.getenv(
-            "EASYVOICE_TTS_MODEL",
-            "auto"  # Let KittenTTS auto-download model
+            "EASYVOICE_TTS_MODEL", "auto"  # Let KittenTTS auto-download model
         )
     )
     tts_voice: int = field(

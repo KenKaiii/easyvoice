@@ -68,9 +68,9 @@ class OpenAIInterface:
                 f"Sending to OpenAI model {self.settings.openai_model}: {messages}"
             )
 
-            response = await self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(  # type: ignore
+                messages=messages,
                 model=self.settings.openai_model,
-                messages=messages,  # type: ignore[arg-type]
                 max_completion_tokens=self.settings.max_tokens,
                 timeout=timeout or self.settings.llm_timeout,
                 reasoning_effort="minimal",  # Ultra-low latency for voice interaction
@@ -85,7 +85,7 @@ class OpenAIInterface:
                         "OpenAI returned empty content. Full response: "
                         f"{response.model_dump()}"
                     )
-                return content
+                return str(content) if content is not None else None
             else:
                 logger.warning("OpenAI response has no choices")
                 logger.warning(f"Full response: {response.model_dump()}")
@@ -120,15 +120,15 @@ class OpenAIInterface:
         try:
             messages = self._prepare_messages(message, context)
 
-            stream = await self.client.chat.completions.create(
+            stream = await self.client.chat.completions.create(  # type: ignore
+                messages=messages,
                 model=self.settings.openai_model,
-                messages=messages,  # type: ignore[arg-type]
                 max_completion_tokens=self.settings.max_tokens,
                 stream=True,
                 reasoning_effort="minimal",  # Ultra-low latency for voice interaction
             )
 
-            async for chunk in stream:  # type: ignore[union-attr]
+            async for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta.content:
                     yield chunk.choices[0].delta.content
 

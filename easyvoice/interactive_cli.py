@@ -114,11 +114,11 @@ class InteractiveCLI:
                     "[bold cyan]Preloading TTS model...", spinner="dots"
                 ):
                     from easyvoice.audio.tts import KittenTTS
-                    
+
                     self.tts = KittenTTS(self.settings)
                     # Force model loading regardless of development mode
                     await self.tts.load_model()
-                    
+
                 console.print("🔊 TTS model preloaded!", style="bold cyan")
             except Exception as e:
                 console.print(f"⚠️ TTS preload failed: {e}", style="yellow")
@@ -344,64 +344,72 @@ class InteractiveCLI:
     async def _record_push_to_talk(self, audio_input: Any) -> np.ndarray:
         """Record audio with push-to-talk (TAB to start, any key to stop)"""
         import sys
-        
-        console.print("🎤 [bold green]Press TAB to start recording, then any key to stop[/bold green]")
-        
+
+        console.print(
+            "🎤 [bold green]Press TAB to start recording, "
+            "then any key to stop[/bold green]"
+        )
+
         try:
-            import termios, tty
-            
+            import termios
+            import tty
+
             # Get original terminal settings
             fd = sys.stdin.fileno()
             old_settings = termios.tcgetattr(fd)
-            
+
             try:
                 tty.setcbreak(fd)
-                
+
                 while True:
                     # Wait for TAB key press to start
                     key = sys.stdin.read(1)
-                    if key == '\t':  # TAB character
-                        console.print("🔴 [bold red]Recording... Press any key to stop[/bold red]")
-                        
+                    if key == "\t":  # TAB character
+                        console.print(
+                            "🔴 [bold red]Recording... Press any key to stop[/bold red]"
+                        )
+
                         # Start recording
                         await audio_input.start_recording()
-                        
+
                         # Wait for ANY key press to stop
                         sys.stdin.read(1)
-                        
+
                         # Stop recording and get data
                         await audio_input.stop_recording()
-                        audio_data = audio_input.get_audio_data()
-                        
+                        audio_data: np.ndarray = audio_input.get_audio_data()
+
                         console.print("⏹️ [dim]Recording stopped[/dim]")
                         return audio_data
-                    elif key == '\x03':  # Ctrl+C
+                    elif key == "\x03":  # Ctrl+C
                         raise KeyboardInterrupt
                     else:
                         console.print("[dim]Press TAB to start recording...[/dim]")
-                        
+
             finally:
                 termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-                
+
         except (ImportError, OSError, AttributeError) as e:
             # Fallback for systems without proper terminal support
             console.print(f"[yellow]Terminal input not available: {e}[/yellow]")
-            console.print("[yellow]Using simplified input mode - press Enter to record[/yellow]")
-            
+            console.print(
+                "[yellow]Using simplified input mode - press Enter to record[/yellow]"
+            )
+
             # Simple fallback - press Enter to start/stop recording
             while True:
                 input("Press Enter to start recording...")
                 console.print("🔴 [bold red]Recording...[/bold red]")
-                
+
                 await audio_input.start_recording()
                 input("Press Enter to stop recording...")
                 await audio_input.stop_recording()
-                audio_data = audio_input.get_audio_data()
-                
+                fallback_audio_data: np.ndarray = audio_input.get_audio_data()
+
                 console.print("⏹️ [dim]Recording stopped[/dim]")
-                return audio_data
-        
-        return np.array([])
+                return fallback_audio_data
+
+        return np.array([])  # type: ignore[unreachable]
 
     async def _record_with_visualization(self, audio_input: Any) -> np.ndarray:
         """Record audio with real-time decibel meter and waveform visualization"""
@@ -519,7 +527,7 @@ class InteractiveCLI:
             from easyvoice.audio.stt import WhisperSTT
 
             stt = WhisperSTT(self.settings)
-            user_text = await stt.transcribe_audio(audio_data)
+            user_text = await stt.transcribe_audio_data(audio_data)
             if not user_text or not user_text.strip():
                 return None
             return user_text
@@ -552,7 +560,7 @@ class InteractiveCLI:
             from easyvoice.audio.stt import WhisperSTT
 
             stt = WhisperSTT(self.settings)
-            user_text = await stt.transcribe_audio(audio_data)
+            user_text = await stt.transcribe_audio_data(audio_data)
             if not user_text or not user_text.strip():
                 console.print("No speech detected, continuing...", style="dim")
                 return None
@@ -649,14 +657,18 @@ class InteractiveCLI:
     async def handle_voice(self) -> None:
         """Handle voice conversation mode"""
         await self.initialize_agent()
-        
+
         # Preload TTS model before starting voice mode
         await self.preload_tts()
 
         console.print("🎤 Starting voice conversation mode", style=STYLE_BOLD_BLUE)
-        
+
         if self.settings.push_to_talk:
-            console.print("Hold [bold green]TAB[/bold green] to talk, [bold red]Ctrl+C[/bold red] to exit\n", style="dim")
+            console.print(
+                "Hold [bold green]TAB[/bold green] to talk, "
+                "[bold red]Ctrl+C[/bold red] to exit\n",
+                style="dim",
+            )
         else:
             console.print("Say something to start... (Ctrl+C to exit)\n", style="dim")
 
@@ -665,11 +677,12 @@ class InteractiveCLI:
 
             # Initialize audio components
             audio_input = AudioInput(self.settings)
-            
+
             # Use preloaded TTS or create new one
             tts = self.tts if self.tts is not None else None
             if tts is None:
                 from easyvoice.audio.tts import KittenTTS
+
                 tts = KittenTTS(self.settings)
 
             # Run voice conversation with persistent meter
