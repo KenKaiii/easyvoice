@@ -322,6 +322,49 @@ class InteractiveCLI:
 
         return speech_detected
 
+    async def _record_push_to_talk(self, audio_input: Any) -> np.ndarray:
+        """Record audio with push-to-talk (space bar)"""
+        import sys, termios, tty
+        
+        console.print("🎤 [bold green]Hold SPACE and speak, release when done[/bold green]")
+        
+        # Get original terminal settings
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        
+        try:
+            tty.cbreak(fd)
+            
+            while True:
+                # Wait for space key press
+                key = sys.stdin.read(1)
+                if key == ' ':
+                    console.print("🔴 [bold red]Recording...[/bold red] (release SPACE to stop)")
+                    
+                    # Start recording
+                    await audio_input.start_recording()
+                    
+                    # Wait for space key release
+                    while True:
+                        key = sys.stdin.read(1)
+                        if key == ' ':
+                            break
+                        await asyncio.sleep(0.1)
+                    
+                    # Stop recording and get data
+                    await audio_input.stop_recording()
+                    audio_data = audio_input.get_audio_data()
+                    
+                    console.print("⏹️ [dim]Recording stopped[/dim]")
+                    return audio_data
+                elif key == '\x03':  # Ctrl+C
+                    raise KeyboardInterrupt
+                    
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        
+        return np.array([])
+
     async def _record_with_visualization(self, audio_input: Any) -> np.ndarray:
         """Record audio with real-time decibel meter and waveform visualization"""
         import time
@@ -454,8 +497,12 @@ class InteractiveCLI:
     async def _process_voice_input(self, audio_input: Any) -> Optional[str]:
         """Process a single voice input cycle"""
 
-        # Record until silence with audio visualization (includes listening message)
-        audio_data = await self._record_with_visualization(audio_input)
+        # Choose recording method based on settings
+        if self.settings.push_to_talk:
+            audio_data = await self._record_push_to_talk(audio_input)
+        else:
+            # Record until silence with audio visualization (includes listening message)
+            audio_data = await self._record_with_visualization(audio_input)
 
         if len(audio_data) == 0:
             return None
@@ -563,7 +610,11 @@ class InteractiveCLI:
         await self.initialize_agent()
 
         console.print("🎤 Starting voice conversation mode", style=STYLE_BOLD_BLUE)
-        console.print("Say something to start... (Ctrl+C to exit)\n", style="dim")
+        
+        if self.settings.push_to_talk:
+            console.print("Press [bold green]SPACE[/bold green] to talk, [bold red]Ctrl+C[/bold red] to exit\n", style="dim")
+        else:
+            console.print("Say something to start... (Ctrl+C to exit)\n", style="dim")
 
         try:
             from easyvoice.audio.input import AudioInput

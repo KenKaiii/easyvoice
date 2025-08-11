@@ -48,6 +48,9 @@ class Settings:
     silence_duration: float = field(
         default_factory=lambda: float(os.getenv("EASYVOICE_SILENCE_DURATION", "1.0"))
     )
+    push_to_talk: bool = field(
+        default_factory=lambda: os.getenv("EASYVOICE_PUSH_TO_TALK", "true").lower() == "true"
+    )
 
     # Speech-to-Text (Whisper)
     whisper_model: str = field(
