@@ -215,14 +215,22 @@ download_and_run_installer() {
     print_step "Installing EasyVoice..."
     cd "${temp_dir}/easyvoice"
     
-    # Run pip install directly since we have the full source (with audio dependencies)
-    if pip3 install --user ".[audio]" --no-warn-script-location &>/dev/null; then
+    # Force reinstall to ensure we get the latest version
+    if pip3 install --user --force-reinstall . --no-warn-script-location; then
         print_success "EasyVoice installed successfully"
-    elif pip3 install --user ".[audio]" --break-system-packages --no-warn-script-location &>/dev/null; then
+    elif pip3 install --user --force-reinstall . --break-system-packages --no-warn-script-location; then
         print_success "EasyVoice installed successfully"
     else
-        print_error "Installation failed"
-        exit 1
+        print_error "Installation failed - trying fallback method"
+        # Fallback: direct pip install from GitHub
+        if pip3 install --user --force-reinstall "git+https://github.com/KenKaiii/easyvoice.git" --no-warn-script-location; then
+            print_success "EasyVoice installed via GitHub"
+        elif pip3 install --user --force-reinstall "git+https://github.com/KenKaiii/easyvoice.git" --break-system-packages --no-warn-script-location; then
+            print_success "EasyVoice installed via GitHub"
+        else
+            print_error "All installation methods failed"
+            exit 1
+        fi
     fi
     
     # Fix PATH for macOS and Linux
