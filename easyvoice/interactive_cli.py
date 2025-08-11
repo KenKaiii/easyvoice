@@ -599,8 +599,11 @@ class InteractiveCLI:
                     break
 
     async def _voice_conversation_loop(self, audio_input: Any, tts: Any) -> None:
-        """Run voice conversation with persistent audio meter"""
-        if not self.settings.show_waveform:
+        """Run voice conversation with appropriate input method"""
+        if self.settings.push_to_talk:
+            # Push-to-talk mode - no visual meter needed
+            await self._simple_voice_loop(audio_input, tts)
+        elif not self.settings.show_waveform:
             await self._simple_voice_loop(audio_input, tts)
         else:
             await self._visual_voice_loop(audio_input, tts)

@@ -99,7 +99,7 @@ def listen(
     console.print("🎤 Starting voice conversation mode...", style="bold green")
 
     if push_to_talk:
-        console.print("📢 Push-to-talk mode enabled (Press SPACE to talk)", style="dim")
+        console.print("📢 Push-to-talk mode enabled (Hold TAB to talk)", style="dim")
     else:
         console.print("🔊 Voice activity detection enabled", style="dim")
 
