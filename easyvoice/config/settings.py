@@ -60,11 +60,11 @@ class Settings:
         default_factory=lambda: os.getenv("EASYVOICE_WHISPER_LANGUAGE")
     )
 
-    # Text-to-Speech (fallback to espeak if KittenTTS unavailable)
+    # Text-to-Speech (KittenTTS)
     tts_model: str = field(
         default_factory=lambda: os.getenv(
             "EASYVOICE_TTS_MODEL",
-            "espeak"  # Use system espeak as reliable fallback
+            "auto"  # Let KittenTTS auto-download model
         )
     )
     tts_voice: int = field(
