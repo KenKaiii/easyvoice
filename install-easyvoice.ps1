@@ -19,6 +19,7 @@ function Write-Header {
     Write-Host "┌─────────────────────────────────────┐" -ForegroundColor Cyan
     Write-Host "│       🎤 EasyVoice Installer       │" -ForegroundColor Cyan
     Write-Host "│   Lightweight Voice Agent CLI      │" -ForegroundColor Cyan
+    Write-Host "│        Created by Ken Kai           │" -ForegroundColor Cyan
     Write-Host "└─────────────────────────────────────┘" -ForegroundColor Cyan
     Write-Host ""
 }
@@ -239,6 +240,8 @@ function Show-NextSteps {
     Write-Host "  pip install 'easyvoice[audio]'"
     Write-Host ""
     Write-Host "🎤 Welcome to EasyVoice!" -ForegroundColor Green
+    Write-Host "Created by Ken Kai - AI Developer" -ForegroundColor Cyan
+    Write-Host "Follow more AI projects: Ken Kai does AI" -ForegroundColor Cyan
 }
 
 function Main {

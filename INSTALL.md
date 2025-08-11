@@ -1,5 +1,8 @@
 # 🚀 EasyVoice Installation Guide
 
+**Created by Ken Kai** - AI Developer  
+*Follow more AI projects: Ken Kai does AI*
+
 ## One-Command Installation (Recommended)
 
 The easiest way to install EasyVoice is using our universal installer that automatically detects your operating system and runs the appropriate installation script.

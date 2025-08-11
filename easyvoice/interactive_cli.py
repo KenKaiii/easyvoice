@@ -59,9 +59,10 @@ class InteractiveCLI:
             banner_text = Text("🎤 EasyVoice CLI", style=STYLE_BOLD_CYAN)
 
         subtitle = Text(f"Lightweight Voice Agent CLI v{__version__}", style="dim")
+        author = Text("Created by Ken Kai - AI Developer", style="dim cyan")
 
         panel = Panel.fit(
-            f"{banner_text}\n{subtitle}", border_style="cyan", padding=(0, 2)
+            f"{banner_text}\n{subtitle}\n{author}", border_style="cyan", padding=(0, 2)
         )
         console.print(panel)
 

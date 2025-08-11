@@ -30,6 +30,7 @@ print_header() {
     echo "┌─────────────────────────────────────┐"
     echo "│       🎤 EasyVoice Installer       │"
     echo "│   Lightweight Voice Agent CLI      │"
+    echo "│        Created by Ken Kai           │"
     echo "└─────────────────────────────────────┘"
     echo -e "${NC}"
 }
@@ -270,6 +271,8 @@ show_next_steps() {
     echo "  pip install 'easyvoice[audio]'"
     echo ""
     echo -e "${GREEN}🎤 Welcome to EasyVoice!${NC}"
+    echo -e "${CYAN}Created by Ken Kai - AI Developer${NC}"
+    echo -e "${CYAN}Follow more AI projects: Ken Kai does AI${NC}"
 }
 
 main() {

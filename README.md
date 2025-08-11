@@ -2,6 +2,9 @@
 
 Lightweight voice agent CLI with real-time audio processing and tool calling capabilities.
 
+**Created by Ken Kai** - AI Developer  
+*Follow more AI projects: Ken Kai does AI*
+
 ## ✨ Features
 
 - **Interactive CLI**: No flags needed - just run `easyvoice`
