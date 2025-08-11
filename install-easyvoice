@@ -155,6 +155,58 @@ download_and_run_installer() {
     rm -rf "${temp_dir}"
 }
 
+setup_openai_api() {
+    if [[ "$TEST_MODE" == "true" ]]; then
+        print_step "TEST MODE: Would setup OpenAI API"
+        return 0
+    fi
+    
+    echo ""
+    print_step "Setting up OpenAI API for seamless experience..."
+    
+    # Check if API key is already set
+    if [[ -n "${OPENAI_API_KEY:-}" ]]; then
+        print_success "OpenAI API key already configured"
+        return 0
+    fi
+    
+    echo ""
+    echo -e "${CYAN}EasyVoice uses OpenAI for the best voice AI experience.${NC}"
+    echo -e "${YELLOW}You'll need an OpenAI API key (get one at: https://platform.openai.com/api-keys)${NC}"
+    echo ""
+    
+    # Prompt for API key
+    read -p "$(echo -e ${BLUE}Enter your OpenAI API key [or press Enter to skip]:${NC} )" api_key
+    
+    if [[ -n "$api_key" ]]; then
+        # Add to shell profile
+        local shell_profile=""
+        if [[ -f "$HOME/.zshrc" ]]; then
+            shell_profile="$HOME/.zshrc"
+        elif [[ -f "$HOME/.bash_profile" ]]; then
+            shell_profile="$HOME/.bash_profile"
+        elif [[ -f "$HOME/.bashrc" ]]; then
+            shell_profile="$HOME/.bashrc"
+        fi
+        
+        if [[ -n "$shell_profile" ]]; then
+            echo "export OPENAI_API_KEY=\"$api_key\"" >> "$shell_profile"
+            export OPENAI_API_KEY="$api_key"
+            print_success "OpenAI API key saved to $shell_profile"
+        else
+            export OPENAI_API_KEY="$api_key"
+            print_warning "API key set for this session only"
+            print_step "Add 'export OPENAI_API_KEY=\"$api_key\"' to your shell profile"
+        fi
+        
+        return 0
+    else
+        print_warning "Skipping API key setup - you can set it later with:"
+        print_step "export OPENAI_API_KEY=\"your-key-here\""
+        return 1
+    fi
+}
+
 verify_installation() {
     if [[ "$TEST_MODE" == "true" ]]; then
         print_step "TEST MODE: Would verify installation"
@@ -166,6 +218,17 @@ verify_installation() {
     if command -v easyvoice &> /dev/null; then
         local version=$(easyvoice --version 2>/dev/null || echo "unknown")
         print_success "EasyVoice installed successfully! Version: $version"
+        
+        # Test basic functionality
+        if [[ -n "${OPENAI_API_KEY:-}" ]]; then
+            print_step "Testing OpenAI connection..."
+            if timeout 10 easyvoice ask "Hello" &>/dev/null; then
+                print_success "OpenAI integration working!"
+            else
+                print_warning "OpenAI test failed - check your API key and internet connection"
+            fi
+        fi
+        
         return 0
     else
         print_warning "easyvoice command not found in PATH"
@@ -176,23 +239,37 @@ verify_installation() {
 
 show_next_steps() {
     echo ""
-    echo -e "${GREEN}🎉 Installation Complete!${NC}"
+    echo -e "${GREEN}🎉 EasyVoice is Ready!${NC}"
     echo ""
-    echo -e "${CYAN}Quick Start:${NC}"
-    echo "  easyvoice                    # Start interactive mode"
-    echo "  easyvoice chat               # Start text chat"
+    
+    if [[ -n "${OPENAI_API_KEY:-}" ]]; then
+        echo -e "${GREEN}✅ OpenAI API configured - you're all set!${NC}"
+        echo ""
+        echo -e "${CYAN}Try it now:${NC}"
+        echo "  easyvoice                    # Start interactive mode"
+        echo "  easyvoice chat               # Start text chat"
+        echo "  easyvoice ask \"Hello!\"       # Ask your first question"
+    else
+        echo -e "${YELLOW}⚠️  OpenAI API key needed for full functionality${NC}"
+        echo ""
+        echo -e "${CYAN}To get started:${NC}"
+        echo "  1. Get an API key at: https://platform.openai.com/api-keys"
+        echo "  2. Run: export OPENAI_API_KEY=\"your-key-here\""
+        echo "  3. Then try: easyvoice ask \"Hello!\""
+    fi
+    
+    echo ""
+    echo -e "${CYAN}All Commands:${NC}"
+    echo "  easyvoice                    # Interactive mode with menu"
+    echo "  easyvoice chat               # Start text chat"  
     echo "  easyvoice ask \"question\"     # Ask single question"
     echo "  easyvoice --help             # Show all options"
     echo ""
-    echo -e "${CYAN}Optional Audio Dependencies:${NC}"
-    echo "  For voice features, install audio dependencies:"
+    echo -e "${CYAN}Optional Voice Features:${NC}"
+    echo "  For voice conversations, install audio dependencies:"
     echo "  pip install 'easyvoice[audio]'"
     echo ""
-    echo -e "${CYAN}Configuration:${NC}"
-    echo "  Set OPENAI_API_KEY for OpenAI models"
-    echo "  Or configure Ollama for local models"
-    echo ""
-    echo -e "${YELLOW}Need help? Check the documentation or run 'easyvoice --help'${NC}"
+    echo -e "${GREEN}🎤 Welcome to EasyVoice!${NC}"
 }
 
 main() {
@@ -207,6 +284,9 @@ main() {
     
     # Download and run appropriate installer
     download_and_run_installer
+    
+    # Setup OpenAI API for seamless experience
+    setup_openai_api
     
     # Verify installation worked
     if verify_installation; then

@@ -123,25 +123,122 @@ function Test-Installation {
     return $false
 }
 
+function Set-OpenAIAPI {
+    Write-Host ""
+    Write-Step "Setting up OpenAI API for seamless experience..."
+    
+    # Check if API key is already set
+    if ($env:OPENAI_API_KEY) {
+        Write-Success "OpenAI API key already configured"
+        return $true
+    }
+    
+    Write-Host ""
+    Write-Host "EasyVoice uses OpenAI for the best voice AI experience." -ForegroundColor Cyan
+    Write-Host "You'll need an OpenAI API key (get one at: https://platform.openai.com/api-keys)" -ForegroundColor Yellow
+    Write-Host ""
+    
+    # Prompt for API key
+    $apiKey = Read-Host "Enter your OpenAI API key [or press Enter to skip]"
+    
+    if ($apiKey) {
+        # Set environment variable for current session
+        $env:OPENAI_API_KEY = $apiKey
+        
+        # Add to PowerShell profile for persistence
+        try {
+            $profilePath = $PROFILE.CurrentUserAllHosts
+            if (-not (Test-Path $profilePath)) {
+                New-Item -ItemType File -Path $profilePath -Force | Out-Null
+            }
+            Add-Content -Path $profilePath -Value "`n`$env:OPENAI_API_KEY = `"$apiKey`""
+            Write-Success "OpenAI API key saved to PowerShell profile"
+        }
+        catch {
+            Write-Warning "API key set for this session only"
+            Write-Step "Add '`$env:OPENAI_API_KEY = `"$apiKey`"' to your PowerShell profile"
+        }
+        
+        return $true
+    }
+    else {
+        Write-Warning "Skipping API key setup - you can set it later with:"
+        Write-Step "`$env:OPENAI_API_KEY = `"your-key-here`""
+        return $false
+    }
+}
+
+function Test-Installation {
+    Write-Step "Verifying installation..."
+    
+    try {
+        $version = & easyvoice --version 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Success "EasyVoice installed successfully! Version: $version"
+            
+            # Test basic functionality if API key is set
+            if ($env:OPENAI_API_KEY) {
+                Write-Step "Testing OpenAI connection..."
+                try {
+                    $testResult = & timeout 10 easyvoice ask "Hello" 2>$null
+                    if ($LASTEXITCODE -eq 0) {
+                        Write-Success "OpenAI integration working!"
+                    }
+                    else {
+                        Write-Warning "OpenAI test failed - check your API key and internet connection"
+                    }
+                }
+                catch {
+                    Write-Warning "OpenAI test failed - check your API key and internet connection"
+                }
+            }
+            
+            return $true
+        }
+    }
+    catch {
+        # Command not found
+    }
+    
+    Write-Warning "easyvoice command not found in PATH"
+    Write-Step "You may need to restart your terminal or add Python Scripts to PATH"
+    return $false
+}
+
 function Show-NextSteps {
     Write-Host ""
-    Write-Host "🎉 Installation Complete!" -ForegroundColor Green
+    Write-Host "🎉 EasyVoice is Ready!" -ForegroundColor Green
     Write-Host ""
-    Write-Host "Quick Start:" -ForegroundColor Cyan
-    Write-Host "  easyvoice                    # Start interactive mode"
-    Write-Host "  easyvoice chat               # Start text chat"
+    
+    if ($env:OPENAI_API_KEY) {
+        Write-Host "✅ OpenAI API configured - you're all set!" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "Try it now:" -ForegroundColor Cyan
+        Write-Host "  easyvoice                    # Start interactive mode"
+        Write-Host "  easyvoice chat               # Start text chat"
+        Write-Host "  easyvoice ask `"Hello!`"       # Ask your first question"
+    }
+    else {
+        Write-Host "⚠️  OpenAI API key needed for full functionality" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "To get started:" -ForegroundColor Cyan
+        Write-Host "  1. Get an API key at: https://platform.openai.com/api-keys"
+        Write-Host "  2. Run: `$env:OPENAI_API_KEY = `"your-key-here`""
+        Write-Host "  3. Then try: easyvoice ask `"Hello!`""
+    }
+    
+    Write-Host ""
+    Write-Host "All Commands:" -ForegroundColor Cyan
+    Write-Host "  easyvoice                    # Interactive mode with menu"
+    Write-Host "  easyvoice chat               # Start text chat"  
     Write-Host "  easyvoice ask `"question`"     # Ask single question"
     Write-Host "  easyvoice --help             # Show all options"
     Write-Host ""
-    Write-Host "Optional Audio Dependencies:" -ForegroundColor Cyan
-    Write-Host "  For voice features, install audio dependencies:"
+    Write-Host "Optional Voice Features:" -ForegroundColor Cyan
+    Write-Host "  For voice conversations, install audio dependencies:"
     Write-Host "  pip install 'easyvoice[audio]'"
     Write-Host ""
-    Write-Host "Configuration:" -ForegroundColor Cyan
-    Write-Host "  Set OPENAI_API_KEY for OpenAI models"
-    Write-Host "  Or configure Ollama for local models"
-    Write-Host ""
-    Write-Host "Need help? Check the documentation or run 'easyvoice --help'" -ForegroundColor Yellow
+    Write-Host "🎤 Welcome to EasyVoice!" -ForegroundColor Green
 }
 
 function Main {
@@ -158,6 +255,9 @@ function Main {
         Write-Error "Installation failed"
         exit 1
     }
+    
+    # Setup OpenAI API for seamless experience
+    Set-OpenAIAPI | Out-Null
     
     # Verify installation
     if (Test-Installation) {
