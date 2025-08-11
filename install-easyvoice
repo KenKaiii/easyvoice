@@ -194,6 +194,24 @@ download_and_run_installer() {
         exit 1
     fi
 
+    # Install system dependencies for TTS
+    print_step "Installing system dependencies..."
+    if command -v apt-get >/dev/null 2>&1; then
+        if sudo -n apt-get update >/dev/null 2>&1 && sudo -n apt-get install -y espeak espeak-data >/dev/null 2>&1; then
+            print_success "System dependencies installed"
+        else
+            print_warning "Could not install espeak (TTS will use fallback)"
+        fi
+    elif command -v brew >/dev/null 2>&1; then
+        if brew install espeak >/dev/null 2>&1; then
+            print_success "System dependencies installed"
+        else
+            print_warning "Could not install espeak (TTS will use fallback)"
+        fi
+    else
+        print_warning "Package manager not found - install 'espeak' manually for TTS"
+    fi
+
     print_step "Installing EasyVoice..."
     cd "${temp_dir}/easyvoice"
     
