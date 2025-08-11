@@ -37,6 +37,7 @@ class InteractiveCLI:
         self.settings = Settings(debug=True)  # Force debug mode for CLI
         self.agent: Optional[VoiceAgent] = None
         self.running = True
+        self.tts: Optional[Any] = None  # Preloaded TTS instance
 
         # Setup signal handlers
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -104,6 +105,24 @@ class InteractiveCLI:
                         "⚠️ Voice agent partially ready",
                         style="bold yellow",
                     )
+
+    async def preload_tts(self) -> None:
+        """Preload TTS model to avoid first-response delay"""
+        if self.tts is None:
+            try:
+                with console.status(
+                    "[bold cyan]Preloading TTS model...", spinner="dots"
+                ):
+                    from easyvoice.audio.tts import KittenTTS
+                    
+                    self.tts = KittenTTS(self.settings)
+                    # Force model loading regardless of development mode
+                    await self.tts.load_model()
+                    
+                console.print("🔊 TTS model preloaded!", style="bold cyan")
+            except Exception as e:
+                console.print(f"⚠️ TTS preload failed: {e}", style="yellow")
+                self.tts = None
 
     async def handle_chat(self) -> None:
         """Handle text chat mode"""
@@ -630,6 +649,9 @@ class InteractiveCLI:
     async def handle_voice(self) -> None:
         """Handle voice conversation mode"""
         await self.initialize_agent()
+        
+        # Preload TTS model before starting voice mode
+        await self.preload_tts()
 
         console.print("🎤 Starting voice conversation mode", style=STYLE_BOLD_BLUE)
         
@@ -640,11 +662,15 @@ class InteractiveCLI:
 
         try:
             from easyvoice.audio.input import AudioInput
-            from easyvoice.audio.tts import KittenTTS
 
             # Initialize audio components
             audio_input = AudioInput(self.settings)
-            tts = KittenTTS(self.settings)
+            
+            # Use preloaded TTS or create new one
+            tts = self.tts if self.tts is not None else None
+            if tts is None:
+                from easyvoice.audio.tts import KittenTTS
+                tts = KittenTTS(self.settings)
 
             # Run voice conversation with persistent meter
             await self._voice_conversation_loop(audio_input, tts)
