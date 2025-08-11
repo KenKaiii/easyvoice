@@ -197,10 +197,10 @@ download_and_run_installer() {
     print_step "Installing EasyVoice..."
     cd "${temp_dir}/easyvoice"
     
-    # Run pip install directly since we have the full source
-    if pip3 install --user . --no-warn-script-location &>/dev/null; then
+    # Run pip install directly since we have the full source (with audio dependencies)
+    if pip3 install --user ".[audio]" --no-warn-script-location &>/dev/null; then
         print_success "EasyVoice installed successfully"
-    elif pip3 install --user . --break-system-packages --no-warn-script-location &>/dev/null; then
+    elif pip3 install --user ".[audio]" --break-system-packages --no-warn-script-location &>/dev/null; then
         print_success "EasyVoice installed successfully"
     else
         print_error "Installation failed"
@@ -332,10 +332,10 @@ show_next_steps() {
     
     echo ""
     if [[ -n "${OPENAI_API_KEY:-}" ]] && [[ "${OPENAI_TEST_RESULT:-}" == "success" ]]; then
-        echo -e "${GREEN}✅ Ready to use:${NC}"
+        echo -e "${GREEN}✅ Ready to use (voice + text):${NC}"
+        echo "  $easyvoice_cmd                    # Start voice conversation"
         echo "  $easyvoice_cmd ask \"Hello!\""
         echo "  $easyvoice_cmd chat"
-        echo "  $easyvoice_cmd"
     else
         echo -e "${YELLOW}⚠️  Setup OpenAI API key:${NC}"
         echo "  Get key: https://platform.openai.com/api-keys"
