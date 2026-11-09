@@ -5,6 +5,9 @@ Lightweight voice agent CLI with real-time audio processing and tool calling cap
 **Created by Ken Kai** - AI Developer  
 *Follow more AI projects: Ken Kai does AI*
 
+> [!TIP]
+> **Want to build your own apps with AI?** A free 7-day build challenge and 20+ step-by-step projects are in my free community: **[skool.com/raid](https://www.skool.com/raid)**
+
 ## ✨ Features
 
 - **Interactive CLI**: No flags needed - just run `easyvoice`
